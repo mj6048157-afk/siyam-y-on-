@@ -2,13 +2,47 @@ const axios = require("axios");
 const { getPrefix, getStreamFromURL } = global.utils;
 const { commands } = global.GoatBot;
 const fs = require("fs");
+const path = require("path");
 
 let xfont = null;
 let yfont = null;
 let categoryEmoji = null;
 
-// ✅ NEW VIDEO LINK
-const HELP_GIF = "https://files.catbox.moe/rjdbb9.mp4";
+// 🎥 VIDEO ROTATION SYSTEM
+const HELP_VIDEOS = [
+  "https://files.catbox.moe/rjdbb9.mp4",
+  "https://files.catbox.moe/0wx30s.mp4"
+];
+
+const videoCountFile = path.join(__dirname, "help_video_count.json");
+
+function getNextHelpVideo() {
+  let index = 0;
+
+  try {
+    if (fs.existsSync(videoCountFile)) {
+      const data = JSON.parse(fs.readFileSync(videoCountFile, "utf8"));
+      index = data.index || 0;
+    }
+  } catch (e) {
+    console.log("Video count read error:", e.message);
+  }
+
+  const selectedVideo = HELP_VIDEOS[index];
+
+  const nextIndex = (index + 1) % HELP_VIDEOS.length;
+
+  try {
+    fs.writeFileSync(
+      videoCountFile,
+      JSON.stringify({ index: nextIndex })
+    );
+  } catch (e) {
+    console.log("Video count write error:", e.message);
+  }
+
+  return selectedVideo;
+}
 
 // 🔒 AUTHOR LOCK SYSTEM
 const AUTHOR_NAME = "FARHAN-KHAN";
@@ -94,6 +128,9 @@ module.exports = {
 
     const prefix = getPrefix(event.threadID);
     const input = args.join(" ").trim();
+
+    // 🎥 AUTO VIDEO CHANGE
+    const HELP_GIF = getNextHelpVideo();
 
     const categories = {};
     for (const [name, cmd] of commands) {
