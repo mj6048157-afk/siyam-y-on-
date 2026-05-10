@@ -3,14 +3,14 @@ const moment = require("moment-timezone");
 
 const getStreamFromURL = global.utils.getStreamFromURL;
 
-// ✅ NEW VIDEO LINK
+// ✅ VIDEO LIST
 const gifList = [
-  "https://files.catbox.moe/6j9t8b.mp4",
-  "https://files.catbox.moe/6j9t8b.mp4"
+	"https://files.catbox.moe/6j9t8b.mp4",
+	"https://files.catbox.moe/78abck.mp4"
 ];
 
-const getRandomGif = () =>
-	gifList[Math.floor(Math.random() * gifList.length)];
+// ✅ per-thread toggle storage
+global.GoatBot.prefixVideoToggle = global.GoatBot.prefixVideoToggle || {};
 
 module.exports = {
 	config: {
@@ -39,7 +39,7 @@ module.exports = {
 		if (!args[0])
 			return message.reply(getLang("usage"));
 
-		const gif = getRandomGif();
+		const gif = getStreamFromURL(gifList[0]);
 
 		if (args[0] == 'reset') {
 			await threadsData.set(event.threadID, null, "data.prefix");
@@ -72,7 +72,7 @@ module.exports = {
 	},
 
 	onReaction: async function ({ event, message, threadsData, Reaction, getLang }) {
-		
+
 		if (event.userID !== Reaction.author) return;
 
 		global.GoatBot.onReaction.delete(event.messageID);
@@ -102,18 +102,26 @@ module.exports = {
 	onChat: async function ({ event, message, threadsData }) {
 		if (!event.body || event.body.toLowerCase() !== "prefix") return;
 
-		const gif = getRandomGif();
+		const threadID = event.threadID;
+
+		// ✅ toggle system (0 → 1 → 0 → 1 ...)
+		if (global.GoatBot.prefixVideoToggle[threadID] === undefined)
+			global.GoatBot.prefixVideoToggle[threadID] = 0;
+
+		const index = global.GoatBot.prefixVideoToggle[threadID];
+		global.GoatBot.prefixVideoToggle[threadID] = index === 0 ? 1 : 0;
+
+		const gif = await getStreamFromURL(gifList[index]);
 
 		const systemPrefix = global.GoatBot.config.prefix;
-		const groupPrefix = global.utils.getPrefix(event.threadID);
+		const groupPrefix = global.utils.getPrefix(threadID);
 
-		const threadInfo = await threadsData.get(event.threadID);
+		const threadInfo = await threadsData.get(threadID);
 		const groupName = threadInfo?.threadName || "Unknown Group";
 
 		const time = moment().tz("Asia/Dhaka").format("hh:mm A");
-		const date = moment().tz("DD MMM YYYY");
+		const date = moment().tz("Asia/Dhaka").format("DD MMM YYYY");
 
-		// ✅ YOUR NAME SET
 		const owner = "UDAY HASAN SIYAM";
 
 		return message.reply({
@@ -127,7 +135,7 @@ module.exports = {
 ┃ 👑 𓆩𝐎𝐖𝐍𝐄𝐑𓆪: ${owner}
 ┃ ⚡ 𓆩𝐒𝐓𝐀𝐓𝐔𝐒𓆪: ONLINE
 ╰━━━〔《𓆩𝐍𝐈𝐉𝐇𝐔𝐌𓆪》〕━━━╯`,
-			attachment: await getStreamFromURL(gif)
+			attachment: gif
 		});
 	}
 };
