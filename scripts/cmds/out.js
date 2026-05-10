@@ -17,12 +17,46 @@ module.exports = {
     const botID = api.getCurrentUserID();
     const targetThread = args[0] || event.threadID;
 
+    // 🔥 REAL TIME DATE & TIME (LIVE)
+    const now = new Date();
+
+    const date = now.toLocaleDateString("en-GB", {
+      timeZone: "Asia/Dhaka"
+    });
+
+    const time = now.toLocaleTimeString("en-GB", {
+      timeZone: "Asia/Dhaka",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    });
+
+    const message = `
+╭━━━━━━━━━━━━━━╮
+┃ 👑 𝆠፝𝐒𝐈𝐘𝐀𝐌 👑 ┃
+╰━━━━━━━━━━━━━━╯
+╭──────────────╮
+│ 📅 ${date} │
+│ ⏰ ${time} │
+╰──────────────╯
+
+আমি [,] 🤖 𝆠፝𝐍𝐈𝐉𝐇𝐔𝐌-𝐂𝐇𝐀𝐓-𝐁𝐎𝐓 🤖👋 আমাকে ব্যবহার করার জন্য ধন্যবাদ 😘আলবিদা সবাই! আমি এখন গ্রুপ থেকে বের হচ্ছি...😞
+
+╭━━━━━━━━━━━━━━╮
+┃ 👑 𝆠፝𝐍𝐈𝐉𝐇𝐔𝐌 👑 ┃
+╰━━━━━━━━━━━━━━╯
+`;
+
     try {
-      await api.sendMessage("আমি [,] 🤖 𝆠፝𝐍𝐈𝐉𝐇𝐔𝐌-𝐂𝐇𝐀𝐓-𝐁𝐎𝐓 🤖👋 আমাকে ব্যবহার করার জন্য ধন্যবাদ 😘আলবিদা সবাই! আমি এখন গ্রুপ থেকে বের হচ্ছি...😞", targetThread);
+      await api.sendMessage(message, targetThread);
       await api.removeUserFromGroup(botID, targetThread);
     } catch (error) {
       console.error(error);
-      return api.sendMessage("❌ বের হতে পারলাম না! হয়তো আমি অ্যাডমিন না বা কোনো সমস্যা হয়েছে।", event.threadID);
+      return api.sendMessage(
+        "❌ বের হতে পারলাম না! হয়তো আমি অ্যাডমিন না বা কোনো সমস্যা হয়েছে।",
+        event.threadID
+      );
     }
   },
 };
