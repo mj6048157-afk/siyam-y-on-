@@ -77,7 +77,7 @@ module.exports = {
 
   onChat: async function ({ event, message, api }) {
 
-    const adminIDs = ["61560326905548", "61565260035199"].map(String);
+    const adminIDs = ["uid", "uid"].map(String);
     const senderID = String(event.senderID);
 
     if (bannedUsers.has(senderID)) return;
