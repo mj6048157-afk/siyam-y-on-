@@ -1,84 +1,64 @@
 module.exports = {
   config: {
     name: "tag",
-    aliases: ["all", "everyone"],
-    category: "GROUP",
-    role: 0,
+    version: "1.0",
     author: "MR_FARHAN",
-    countDown: 3,
-    description: {
-      en: "Tag by reply, name or tag all members"
-    },
-    guide: {
-      en: "{pm}tag [name] [msg]\n{pm}tag all [msg]\nReply + {pm}tag [msg]"
-    }
+    role: 0,
+    category: "GROUP",
+    shortDescription: "Random message",
+    longDescription: "Type tag and get random message",
+    guide: "Just type: tag"
   },
 
-  onStart: async ({ api, event, usersData, threadsData, args }) => {
-    const { threadID, messageID, messageReply } = event;
+  onStart: async function () {},
 
+  onChat: async function ({ api, event }) {
     try {
-      const threadData = await threadsData.get(threadID);
+      const body = event.body?.toLowerCase();
 
-      const members = threadData.members
-        .filter(m => m.inGroup === true)
-        .map(m => ({
-          name: m.name,
-          id: m.userID
-        }));
+      // শুধু tag লিখলে কাজ করবে
+      if (body !== "tag") return;
 
-      let tagUsers = [];
-      let text = "";
-      
-      if (messageReply) {
-        const uid = messageReply.senderID;
-        const name = await usersData.getName(uid);
-        tagUsers.push({ name, id: uid });
-        text = args.join(" ");
-      }
+      // শুধু এই ছোট ছোট রিপ্লাইগুলা আসবে
+      const messages = [
+        "everyone ✨ সবাই গ্রুপে আসো 🌸",
+        "everyone 🔥 চিপা থেকে বাহির হও 😹",
+        "everyone 💫 সবার চিপায় ঠান্ডা পড়ুক 🥶",
+        "everyone ⚡ কে কে অনলাইনে আছো 👀",
+        "everyone 🌈 সবাই একটু রেসপন্স দাও 💌",
+        "everyone 🖤 এত শান্ত কেন গ্রুপটা 😴",
+        "everyone 🎭 সবাই কোথায় গেলা 😹",
+        "everyone 🌸 গ্রুপটা জমাও সবাই ✨",
+        "everyone 💥 সবাই একবার হাজিরা দাও 😼",
+        "everyone 🌀 ভূতের মতো সিন মেরে থাকো না 👻",
+        "everyone ☄️ সবাই দ্রুত চলে আসো 🚀",
+        "everyone 🥀 গ্রুপে একটু আওয়াজ দাও 🔊",
+        "everyone 🎀 সবাই চ্যাটে নেমে পড়ো 😽",
+        "everyone 🌟 লুকিয়ে থেকো না বের হও 😹",
+        "everyone 🍁 সবাইকে ডাক দিচ্ছি চলে আসো 💫",
+        "everyone 💎 এত ভাব কিসের রে 😒",
+        "everyone 🕊️ সবাই অ্যাক্টিভ হও 🌸",
+        "everyone 🔥 আজকে গ্রুপে আগুন লাগাও 😈",
+        "everyone 🌺 সবাই রিপ্লাই দাও না হলে জরিমানা 😹",
+        "everyone ⚔️ ঘুম ভেঙে থাকলে সাড়া দাও 😴"
+      ];
 
-      else if (args[0] && ["all", "cdi"].includes(args[0].toLowerCase())) {
-        tagUsers = members;
-        text = args.slice(1).join(" ");
-      }
-
-      else {
-        if (!args[0]) {
-          return api.sendMessage(
-            "⚠️ Name / reply / tag all",
-            threadID,
-            messageID
-          );
-        }
-
-        const searchName = args[0].toLowerCase();
-        text = args.slice(1).join(" ");
-
-        tagUsers = members.filter(m =>
-          m.name.toLowerCase().includes(searchName)
-        );
-
-        if (tagUsers.length === 0) {
-          return api.sendMessage("❌ User Not Found", threadID, messageID);
-        }
-      }
-
-      const mentions = tagUsers.map(u => ({
-        tag: u.name,
-        id: u.id
-      }));
-
-      const namesText = tagUsers.map(u => u.name).join(", ");
-      const body = text ? `${namesText}\n${text}` : namesText;
+      // Random message
+      const randomMsg =
+        messages[Math.floor(Math.random() * messages.length)];
 
       api.sendMessage(
-        { body, mentions },
-        threadID,
-        messageReply ? messageReply.messageID : messageID
+        randomMsg,
+        event.threadID,
+        event.messageID
       );
 
     } catch (err) {
-      api.sendMessage("❌ Error: " + err.message, threadID, messageID);
+      api.sendMessage(
+        "❌ Error: " + err.message,
+        event.threadID,
+        event.messageID
+      );
     }
   }
 };
