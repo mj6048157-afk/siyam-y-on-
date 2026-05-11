@@ -38,8 +38,8 @@ module.exports = {
       "ভুদা": "https://files.catbox.moe/gnyx0p.mp3",
       "মাগি": "https://files.catbox.moe/ecgpak.mp4",
 
-      "খানকি": "https://files.catbox.moe/ecgpak.mp4",
-      "khanki": "https://files.catbox.moe/ecgpak.mp4",
+      "খানকি": "https://files.catbox.moe/zdirp4.mp4",
+      "কলে আসো": "https://files.catbox.moe/p8qlso.mp4",
 
       "good night": "https://files.catbox.moe/i29m4q.mp3",
       "গুড নাইট": "https://files.catbox.moe/i29m4q.mp3",
