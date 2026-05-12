@@ -1,97 +1,358 @@
 const axios = require("axios");
-const fs = require("fs-extra");
+
+const simsim = "https://simsimi-api-tjb1.onrender.com";
 
 module.exports = {
   config: {
-    name: "y",
-    version: "7.9",
-    author: "siyam",
+    name: "bot",
+    aliases: ["hippi", "baby"],
+    version: "2.1.0",
+    author: "rX",
+    countDown: 0,
     role: 0,
-    category: "y"
+    shortDescription: "Cute AI Baby Chatbot",
+    longDescription: "Talk & Chat with Emotion — Auto teach enabled with typing effect.",
+    category: "box chat",
+    guide: {
+      en: "{p}bot [message]\n{p}bot teach [Question] - [Answer]\n{p}bot list"
+    }
   },
 
-  onStart: async function ({ api, event }) {
+  // ─────────────── TYPING ───────────────
 
-    let loading;
-("👑", event.messageID, () => {}, true);
+  sendTyping: async function (api, threadID) {
+    try {
+      if (typeof api.sendTypingIndicatorV2 === "function") {
+        await api.sendTypingIndicatorV2(true, threadID);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        await api.sendTypingIndicatorV2(false, threadID);
+      }
+    } catch (err) {
+      console.error("❌ Typing error:", err.message);
+    }
+  },
 
-      // ⏳ STEP 1: LOADING MESSAGE
-       👑🔥`,
-        event.threadID
+  // ─────────────── GET REPLY ───────────────
+
+  getReply: async function (text, senderName) {
+    try {
+      const res = await axios.get(
+        `${simsim}/simsimi?text=${encodeURIComponent(text)}&senderName=${encodeURIComponent(senderName)}`,
+        {
+          timeout: 10000
+        }
       );
 
-      // 📌 INFO MESSAGE
-      const msg = `
-╔══════════════════════════╗
-        𝐀𝐒𝐒𝐀𝐋𝐀𝐌𝐔 𝐀𝐋𝐀𝐈𝐊𝐔𝐌 ♻️🎀
-╚══════════════════════════╝
+      if (!res.data || !res.data.response)
+        return [];
 
-╔═════════════════════════╗
-      ‿🔥 𝐀𝐒𝐑𝐀𝐅𝐔𝐋 𝐈𝐒𝐋𝐀𝐌 𝐒𝐀𝐊𝐈𝐁 🔥
-╚═════════════════════════╝
+      return Array.isArray(res.data.response)
+        ? res.data.response
+        : [res.data.response];
 
-╭────〔 👤 ‿ 𝐒𝐀𝐊𝐈𝐁 𝐈𝐍𝐅𝐎 〕────╮
-│ 👑 𝐍𝐀𝐌𝐄 ➤ 𝐒𝐀𝐊𝐈𝐁
-│ 🎂 𝐀𝐆𝐄 ➤ 20+
-│ 📘 𝐒𝐓𝐔𝐃𝐘 ➤ 𝐂𝐋𝐀𝐒𝐒 𝟏𝟎
-│ 🚹 𝐆𝐄𝐍𝐃𝐄𝐑 ➤ 𝐌𝐀𝐋𝐄
-│ 💔 𝐒𝐓𝐀𝐓𝐔𝐒 ➤ 𝐒𝐈𝐍𝐆𝐋𝐄
-╰────────────────────╯
+    } catch (err) {
+      console.error("❌ API error:", err.message);
+      return [];
+    }
+  },
 
-╭────〔 📍 𝐋𝐎𝐂𝐀𝐓𝐈𝐎𝐍 〕────╮
-│ 🏠 𝐃𝐈𝐒𝐓𝐑𝐈𝐂𝐓 ➤ 𝐌𝐘𝐌𝐄𝐍𝐒𝐈𝐍𝐆𝐇
-│ 🌍 𝐂𝐎𝐔𝐍𝐓𝐑𝐘 ➤ 𝐁𝐀𝐍𝐆𝐋𝐀𝐃𝐄𝐒𝐇
-╰────────────────────╯
+  // ─────────────── AUTO TEACH ───────────────
 
-╭────〔 🧬 𝐏𝐄𝐑𝐒𝐎𝐍𝐀𝐋 〕────╮
-│ 👪 𝐅𝐀𝐌𝐈𝐋𝐘 ➤ 𝐁𝐈𝐆 𝐒𝐎𝐍 😎
-│ 💞 𝐆𝐅 ➤ 𝐍𝐎 😏
-╰────────────────────╯
+  autoTeach: async function (text, senderName) {
+    try {
+      await axios.get(
+        `${simsim}/teach?ask=${encodeURIComponent(text)}&ans=${encodeURIComponent("hmm baby 😚 (auto learned)")}&senderName=${encodeURIComponent(senderName)}`
+      );
+    } catch (err) {
+      console.error("❌ Auto teach error:", err.message);
+    }
+  },
 
-╭────〔 🎯 𝐇𝐎𝐁𝐁𝐘 〕────╮
-│ 🔥 𝐅𝐑𝐈𝐄𝐍𝐃𝐒 𝐀𝐃𝐃𝐀
-│ 📱 𝐌𝐎𝐁𝐈𝐋𝐄 𝐔𝐒𝐄
-│ 🎧 𝐌𝐔𝐒𝐈𝐂 𝐋𝐈𝐒𝐓𝐄𝐍
-╰────────────────────╯
+  // ─────────────── SEND REPLIES ───────────────
 
-╭────〔 💋 𝐒𝐏𝐄𝐂𝐈𝐀𝐋 〕────╮
-│ 😘 𝐆𝐈𝐑𝐋𝐒 = 𝐔𝐌𝐌𝐀𝐇
-╰────────────────────╯
+  sendReplies: async function ({ message, replies, senderID }) {
+    for (const reply of replies) {
+      if (!reply || typeof reply !== "string") continue;
 
-╭────〔 🌐 𝐂𝐎𝐍𝐓𝐀𝐂𝐓 〕────╮
-│ 🌐 𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊 ➤ facebook.com/61586259527420
-│ 📞 𝐖𝐇𝐀𝐓𝐒𝐀𝐏𝐏 ➤ +8801790452366
-╰────────────────────╯
+      await new Promise(resolve => {
+        message.reply(reply, (err, info) => {
+          if (!err && info?.messageID) {
+            global.GoatBot.onReply.set(info.messageID, {
+              commandName: "bot",
+              author: senderID
+            });
+          }
+          resolve();
+        });
+      });
+    }
+  },
 
-╔════════════════════════════╗
-        🖤 𝐀𝐓𝐓𝐈𝐓𝐔𝐃𝐄 🖤
-╚════════════════════════════╝
+  // ─────────────── MAIN COMMAND ───────────────
 
-➤ 😎 𝐈 𝐋𝐈𝐕𝐄 𝐌𝐘 𝐎𝐖𝐍 𝐖𝐀𝐘  
-➤ 🔥 𝐈 𝐀𝐌 𝐍𝐎𝐓 𝐀 𝐂𝐎𝐏𝐘  
-➤ 🖤 𝐈 𝐀𝐌 𝐀𝐋𝐖𝐀𝐘𝐒 𝐑𝐄𝐀𝐋  
-➤ 💀 𝐍𝐎 𝐑𝐄𝐒𝐏𝐄𝐂𝐓 𝐅𝐎𝐑 𝐅𝐀𝐊𝐄  
+  onStart: async function ({ api, event, args, message, usersData }) {
+    try {
+      const senderID = event.senderID;
+      const senderName = await usersData.getName(senderID);
+      const threadID = event.threadID;
 
-╭────〔 🔥 𝐁𝐑𝐀𝐍𝐃 〕────╮
-│ 👑 𝐒𝐀𝐊𝐈𝐁 𝐕𝐈𝐏
-│ ✔️ 𝐎𝐑𝐈𝐆𝐈𝐍𝐀𝐋
-│ ❌ 𝐍𝐎 𝐂𝐎𝐏𝐘
-╰────────────────────╯
+      const query = args.join(" ").trim();
 
-╭────〔 💍 𝐌𝐀𝐑𝐑𝐈𝐀𝐆𝐄 〕────╮
-│ 🎀 𝐖𝐈𝐋𝐋 𝐃𝐎 𝐀𝐒 𝐏𝐀𝐑𝐄𝐍𝐓𝐒 𝐒𝐀𝐘
-╰────────────────────╯
-`;
+      // Empty Message
+      if (!query) {
+        await this.sendTyping(api, threadID);
 
-      const 
-      // ⛔ STEP 3: DELETE LOADING AFTER INFO SENT
-      try {
-        await api.unsendMessage(loading.messageID);
-      } catch {}
+        const ran = [
+          "Bolo baby 💖",
+          "Hea baby 😚"
+        ];
 
-    } catch (e) {
-      console.log(e);
-      api.sendMessage("❌ INFO SYSTEM ERROR", event.threadID);
+        const random = ran[Math.floor(Math.random() * ran.length)];
+
+        return message.reply(random, (err, info) => {
+          if (!err && info?.messageID) {
+            global.GoatBot.onReply.set(info.messageID, {
+              commandName: "bot",
+              author: senderID
+            });
+          }
+        });
+      }
+
+      const lowerQuery = query.toLowerCase();
+
+      // ───────── TEACH ─────────
+
+      if (args[0]?.toLowerCase() === "teach") {
+        const teachText = query.slice(6).trim();
+        const parts = teachText.split(" - ");
+
+        if (parts.length < 2) {
+          return message.reply(
+            "Use:\nbot teach [Question] - [Reply]"
+          );
+        }
+
+        const ask = parts[0].trim();
+        const ans = parts.slice(1).join(" - ").trim();
+
+        if (!ask || !ans) {
+          return message.reply("Question or answer missing.");
+        }
+
+        const res = await axios.get(
+          `${simsim}/teach?ask=${encodeURIComponent(ask)}&ans=${encodeURIComponent(ans)}&senderName=${encodeURIComponent(senderName)}`
+        );
+
+        return message.reply(
+          res.data?.message || "Learned successfully!"
+        );
+      }
+
+      // ───────── LIST ─────────
+
+      if (args[0]?.toLowerCase() === "list") {
+        const res = await axios.get(`${simsim}/list`);
+
+        if (res.data?.code === 200) {
+          return message.reply(
+            `♾ Total Questions: ${res.data.totalQuestions}\n★ Replies: ${res.data.totalReplies}\n👑 Author: ${res.data.author}`
+          );
+        }
+
+        return message.reply(
+          `Error: ${res.data?.message || "Failed to fetch list"}`
+        );
+      }
+
+      // ───────── NORMAL CHAT ─────────
+
+      await this.sendTyping(api, threadID);
+
+      const replies = await this.getReply(lowerQuery, senderName);
+
+      // যদি API কিছু না দেয়
+      if (!replies.length) {
+
+        console.log(`🧠 Auto teaching: ${lowerQuery}`);
+
+        await this.autoTeach(lowerQuery, senderName);
+
+        const fallbackReplies = [
+          "hmm baby 😚",
+          "কি বলো বুঝলাম না 🥺",
+          "আবার বলো জান 😗",
+          "আমি একটু লজ্জা পাইছি 🙈",
+          "এইটা আমি এখনো শিখি নাই 😿"
+        ];
+
+        const fallback =
+          fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+
+        return message.reply(fallback);
+      }
+
+      await this.sendReplies({
+        message,
+        replies,
+        senderID
+      });
+
+    } catch (err) {
+      console.error("❌ Main command error:", err);
+
+      return message.reply(
+        "Bot is busy 😿"
+      );
+    }
+  },
+
+  // ─────────────── HANDLE REPLY ───────────────
+
+  onReply: async function ({ api, event, message, usersData }) {
+    try {
+      const replyText = event.body?.trim();
+
+      if (!replyText) return;
+
+      const senderName = await usersData.getName(event.senderID);
+
+      await this.sendTyping(api, event.threadID);
+
+      const replies = await this.getReply(
+        replyText.toLowerCase(),
+        senderName
+      );
+
+      // যদি API কিছু না দেয়
+      if (!replies.length) {
+
+        console.log(`🧠 Auto teaching reply: ${replyText}`);
+
+        await this.autoTeach(replyText, senderName);
+
+        const fallbackReplies = [
+          "hmm baby 😚",
+          "আবার বলো না জান 🥺",
+          "আমি বুঝি নাই 😿",
+          "তুমি অনেক কিউট 😗",
+          "এইটা নতুন লাগলো 🙈"
+        ];
+
+        const fallback =
+          fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+
+        return message.reply(fallback);
+      }
+
+      await this.sendReplies({
+        message,
+        replies,
+        senderID: event.senderID
+      });
+
+    } catch (err) {
+      console.error("❌ Reply error:", err);
+
+      return message.reply(
+        "Reply system busy 😿"
+      );
+    }
+  },
+
+  // ─────────────── AUTO CHAT ───────────────
+
+  onChat: async function ({ api, event, message, usersData }) {
+    try {
+      const raw = event.body?.trim().toLowerCase();
+
+      if (!raw) return;
+
+      const senderName = await usersData.getName(event.senderID);
+      const senderID = event.senderID;
+      const threadID = event.threadID;
+
+      // Simple trigger replies
+      const simpleTriggers = [
+        "বট",
+        "bot",
+        "হাই",
+        "বেবি",
+        "baby",
+        "hi",
+        "oi",
+        "oii",
+        "ওই"
+      ];
+
+      if (simpleTriggers.includes(raw)) {
+
+        await this.sendTyping(api, threadID);
+
+        const replies = [
+          "ডাকো কেন 🥺 প্রেম করবা নাকি 😞",
+          "বুকাচুদা আর কত বট বট করবি 🐸",
+          "ওই জান কাছে আসো 🫦👅",
+          "আলাবু বলো সোনা 🤧",
+          "সিয়াম কে দেখছো? 🥺 তাকে কোথাও খুজে পাচ্ছি না 😩",
+          "তুমার নু**নু*তে উম্মাহ 🥺🤌",
+          "হ্যাঁ গো জান বলো 🙂",
+          "ডাকিস না, তুই পচা 😼"
+        ];
+
+        const random =
+          replies[Math.floor(Math.random() * replies.length)];
+
+        return message.reply(random, (err, info) => {
+          if (!err && info?.messageID) {
+            global.GoatBot.onReply.set(info.messageID, {
+              commandName: "bot",
+              author: senderID
+            });
+          }
+        });
+      }
+
+      // Prefix trigger
+      const prefixes = [
+        "ওই ",
+        "bot ",
+        "বেবি ",
+        "বট ",
+        "baby ",
+        "নিঝুম "
+      ];
+
+      const prefix = prefixes.find(p => raw.startsWith(p));
+
+      if (!prefix) return;
+
+      const query = raw.slice(prefix.length).trim();
+
+      if (!query) return;
+
+      await this.sendTyping(api, threadID);
+
+      const replies = await this.getReply(query, senderName);
+
+      // যদি API fail করে
+      if (!replies.length) {
+
+        console.log(`🧠 Auto learned: ${query}`);
+
+        await this.autoTeach(query, senderName);
+
+        return message.reply("hmm baby 😚");
+      }
+
+      await this.sendReplies({
+        message,
+        replies,
+        senderID
+      });
+
+    } catch (err) {
+      console.error("❌ onChat error:", err);
     }
   }
 };
