@@ -148,7 +148,7 @@ module.exports = {
 
       let msg = `╭─────✰『 ${getCategoryEmoji(cat)} ${fontConvert(cat, "category")} 』\n`;
       for (const c of categories[cat].sort())
-        msg += `│⚡ ${fontConvert(c)}\n`;
+        msg += `│🪯 ${fontConvert(c)}\n`;
       msg += `╰────────────✰\n`;
       msg += `> TOTAL: ${categories[cat].length}\n> PREFIX: ${prefix}`;
 
@@ -160,19 +160,19 @@ module.exports = {
 
     // 📜 FULL LIST
     if (!input) {
-      let msg = `╭───────❁\n│✨ ‿𝐃-𝐒 𝐒𝐈𝐘𝐀𝐌 𝗛𝗘𝗟𝗣 𝗟𝗜𝗦𝗧 ✨\n╰────────────❁\n`;
+      let msg = `╭───────❁\n│👑‿𝐒𝐈𝐘𝐀𝐌 𝗛𝗘𝗟𝗣 𝗟𝗜𝗦𝗧👑 \n╰────────────❁\n`;
 
       for (const cat of Object.keys(categories).sort()) {
         msg += `╭─────✰『 ${getCategoryEmoji(cat)} ${fontConvert(cat, "category")} 』\n`;
         for (const c of categories[cat].sort())
-          msg += `│⚡ ${fontConvert(c)}\n`;
+          msg += `│🪯 ${fontConvert(c)}\n`;
         msg += `╰────────────✰\n`;
       }
 
       const total = Object.values(categories).reduce((a, b) => a + b.length, 0);
 
-      msg += `╭─────✰[🌟 𝐄𝐍𝐉𝐎𝐘 🌟]\n│> TOTAL COMMANDS: [${total}]\n│\n│> TYPE: [ ${prefix}help <command> ]\n│\n│> FB.LINK: [https://www.facebook.com/share/1LDy7c49aK/]\n╰────────────✰\n`;
-      msg += `╭─────✰\n│ 💖 ‿𝐍𝐈𝐉𝐇𝐔𝐌-𝗕𝗢𝗧 💖\n╰────────────✰`;
+      msg += `╭─────✰[🪬 𝐄𝐍𝐉𝐎𝐘 🪬]\n│> TOTAL COMMANDS: [${total}]\n│\n│> TYPE: [ ${prefix}help <command> ]\n│\n│> FB.LINK: [https://www.facebook.com/share/1LDy7c49aK/]\n╰────────────✰\n`;
+      msg += `╭─────✰\n│ 🐲 ‿𝐍𝐈𝐉𝐇𝐔𝐌-𝗕𝗢𝗧 🐲\n╰────────────✰`;
 
       return message.reply({
         body: msg,
