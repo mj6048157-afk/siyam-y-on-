@@ -67,7 +67,7 @@ module.exports = {
       "নুনু": "https://files.catbox.moe/r5uz42.mp3",
 
       "🐍": "https://files.catbox.moe/s1k2nx.mp4",
-      "😈": "https://files.catbox.moe/5rdtc6.mp3"
+      "✡️": "https://files.catbox.moe/5rdtc6.mp3"
     };
 
     if (voiceMap[input]) {
