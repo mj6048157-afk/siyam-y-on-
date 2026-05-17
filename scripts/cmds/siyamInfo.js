@@ -4,7 +4,8 @@ const path = require("path");
 
 module.exports = {
   config: {
-    name: [],
+    name: "siyaminfo",
+    aliases: ["siyam"],
     version: "20.2",
     author: "RAKIB HASAN",
     countDown: 1,
@@ -18,6 +19,8 @@ module.exports = {
 
   onChat: async function ({ api, event }) {
 
+    if (!event.body) return;
+
     const triggerWords = [
       "সিয়াম",
       "সিয়াম ভাই",
@@ -28,7 +31,7 @@ module.exports = {
       "siyam vai"
     ];
 
-    const body = event.body ? event.body.toLowerCase() : "";
+    const body = event.body.toLowerCase();
 
     if (!triggerWords.some(word => body.includes(word.toLowerCase()))) return;
 
@@ -36,50 +39,66 @@ module.exports = {
 
     // STYLE ROTATION
     if (!global.siyamStyle) global.siyamStyle = 0;
+
     global.siyamStyle++;
-    if (global.siyamStyle > 4) global.siyamStyle = 1;
+
+    if (global.siyamStyle > 4) {
+      global.siyamStyle = 1;
+    }
 
     const style = global.siyamStyle;
 
-    // HD IMAGE
+    // IMAGE SYSTEM
     async function getHDImage() {
       try {
-        const url = "https://source.unsplash.com/random/1080x1080/?nature,portrait";
 
-        const response = await axios.get(url, {
+        const images = [
+          "https://files.catbox.moe/qlm3ds.jpg",
+          "https://files.catbox.moe/d5exod.jpg"
+        ];
+
+        const randomImage =
+          images[Math.floor(Math.random() * images.length)];
+
+        const response = await axios.get(randomImage, {
           responseType: "arraybuffer"
         });
 
         return response.data;
 
       } catch (err) {
-        const fallback = [
-          "https://files.catbox.moe/qlm3ds.jpg",
-          "https://files.catbox.moe/d5exod.jpg"
-        ];
-
-        const fallbackUrl = fallback[Math.floor(Math.random() * fallback.length)];
-
-        const res = await axios.get(fallbackUrl, {
-          responseType: "arraybuffer"
-        });
-
-        return res.data;
+        console.log("Image Error:", err);
+        return null;
       }
     }
 
-    // CACHE FIXED
+    // CACHE SYSTEM
     const cacheDir = path.join(__dirname, "cache");
-    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
 
-    const cachePath = path.join(cacheDir, `siyam_${Date.now()}.jpg`);
+    if (!fs.existsSync(cacheDir)) {
+      fs.mkdirSync(cacheDir, { recursive: true });
+    }
+
+    const cachePath = path.join(
+      cacheDir,
+      `siyam_${Date.now()}.jpg`
+    );
 
     const imageBuffer = await getHDImage();
+
+    if (!imageBuffer) {
+      return api.sendMessage(
+        "❌ Image load failed!",
+        event.threadID,
+        event.messageID
+      );
+    }
+
     fs.writeFileSync(cachePath, imageBuffer);
 
     const attachment = fs.createReadStream(cachePath);
 
-    // 🔥 YOUR ORIGINAL 4 DESIGNS (UNCHANGED)
+    // 4 DESIGNS
     const designs = [
 
 `╔━━━❖ ❤️ ❖━━━╗
@@ -107,7 +126,7 @@ module.exports = {
 ❂━━ 𝑷𝑹𝑬𝑴𝑰𝑼𝑴 𝑽𝑰𝑩𝑬 ━━❂
 
 ╭─────────────────╮
-│ 👤 𝐍𝐀𝐌𝐄 ➤ 𝑺𝑰𝒀𝑨𝑴 𝑯𝒂𝒔𝒂𝒏
+│ 👤 𝐍𝐀𝐌𝐄 ➤ 𝑺𝑰𝒀𝑨𝑴 𝑯𝒂𝐬𝒂𝒏
 │ 🌍 𝐋𝐎𝐂𝐀𝐓𝐈𝐎𝐍 ➤ 𝐊𝐈𝐒𝐇𝐎𝐑𝐄𝐆𝐀𝐍𝐉, 𝐁𝐀𝐍𝐆𝐋𝐀𝐃𝐄𝐒𝐇
 │ 📚 𝐒𝐓𝐔𝐃𝐘 ➤ 𝐂𝐋𝐀𝐒𝐒 𝐓𝐄𝐍
 │ ⚡ 𝐀𝐆𝐄 ➤ 17+
@@ -166,6 +185,9 @@ PEOPLE FOLLOW MY STYLE"
         attachment
       },
       event.threadID,
+      () => {
+        fs.unlinkSync(cachePath);
+      },
       event.messageID
     );
   }
