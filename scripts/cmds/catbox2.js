@@ -10,7 +10,7 @@ module.exports = {
                 name: "catbox2",
                 aliases: ["cb"],
                 version: "1.7",
-                author: "siyam",
+                author: "MahMUD",
                 countDown: 10,
                 role: 0,
                 description: {
@@ -52,7 +52,7 @@ module.exports = {
                 }
 
                 try {
-                        api.setMessageReaction("🥵", event.messageID, () => {}, true);
+                        api.setMessageReaction("⌛", event.messageID, () => {}, true);
 
                         const attachmentUrl = event.messageReply.attachments[0].url;
                         const baseUrl = await getBase();
