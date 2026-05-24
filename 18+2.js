@@ -3,8 +3,8 @@
 
 module.exports = {
   config: {
-    name: "kanda",
-    aliases: ["18+"],
+    name: "18+2",
+    aliases: ["kanda"],
     version: "2.0",
     author: "kshitiz",
     countDown: 30,
