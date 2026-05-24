@@ -1,6 +1,6 @@
 module.exports = {
   config: {
-    name: "war",
+    name: "su",
     aliases: ["chud"],
     version: "1.0",
     author: "FARHAN-KHAN",
