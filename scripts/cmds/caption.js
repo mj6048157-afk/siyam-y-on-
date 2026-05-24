@@ -30,13 +30,13 @@ module.exports = {
       const triggerWords = [
         "caption",
         "ক্যাপশন",
-        "sad",
-        "স্যাড",
-        "love",
-        "ভালোবাসা",
+        "*sad",
+        "*স্যাড",
+        "*love",
+        "*ভালোবাসা",
         "koshto",
-        "kosto",
-        "কষ্ট"
+        "*kosto",
+        "*কষ্ট"
       ];
 
       const matched = triggerWords.some(word =>
