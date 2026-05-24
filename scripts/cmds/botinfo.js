@@ -1,191 +1,289 @@
 const os = require("os");
+const fs = require("fs");
+
+const AUTHOR = "𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍";
 
 module.exports = {
   config: {
     name: "botinfo",
-    version: "6.1.0",
-    author: "Siyam Hasan",
+    version: "9.0",
+    author: AUTHOR,
     countDown: 3,
     role: 0,
-    shortDescription: "💎 Legendary Profile System",
-    longDescription: "Ultra unique owner + bot + system full info",
-    category: "owner",
+    shortDescription: {
+      en: "Premium Bot Information"
+    },
+    longDescription: {
+      en: "Advanced real bot information system"
+    },
+    category: "owner"
   },
 
-  onStart: async function ({ message }) {
+  onStart: async function ({
+    message,
+    api,
+    event,
+    usersData,
+    threadsData
+  }) {
+
+    // 🔒 AUTHOR LOCK
+    const content = fs.readFileSync(__filename, "utf8");
+
+    if (
+      !content.includes('const AUTHOR = "𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍"')
+    ) {
+      console.log("🚫 AUTHOR LOCK ACTIVATED");
+      process.exit(1);
+    }
 
     const start = Date.now();
 
+    // ⏰ DATE & TIME
     const now = new Date();
-    const time = now.toLocaleTimeString("en-BD");
-    const date = now.toLocaleDateString("en-BD");
+
+    const time = now.toLocaleTimeString("en-US", {
+      timeZone: "Asia/Dhaka",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    });
+
+    const date = now.toLocaleDateString("en-GB", {
+      timeZone: "Asia/Dhaka",
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
+
+    const timezone =
+      Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const hour = now.getHours();
-    const dayStatus = (hour >= 6 && hour < 18) ? "🌞 Day Mode" : "🌙 Night Mode";
 
-    const weathers = ["☀️ Sunny", "🌧 Rainy", "⛅ Cloudy", "🌩 Storm"];
-    const weather = weathers[Math.floor(Math.random() * weathers.length)];
+    const mode =
+      hour >= 6 && hour < 18
+        ? "🌞 DAY MODE"
+        : "🌙 NIGHT MODE";
 
-    const rainTime = `${Math.floor(Math.random() * 12) + 1}:${Math.floor(Math.random() * 60)} min`;
+    // 🤖 BOT SYSTEM
+    const prefix =
+      global.GoatBot?.config?.prefix || "!";
 
-    const msgCount = Math.floor(Math.random() * 2000) + 200;
-    const hours = Math.floor(Math.random() * 15) + 1;
+    const commands =
+      global.GoatBot?.commands?.size || 0;
 
-    const level = Math.floor(msgCount / 150);
-    const xp = msgCount % 150;
+    const events =
+      global.GoatBot?.eventCommands?.size || 0;
 
-    const moods = ["😎 Chill", "🔥 Active", "💔 Sad", "😍 Love", "😴 Sleepy", "🤖 Focused"];
-    const mood = moods[Math.floor(Math.random() * moods.length)];
+    // 👥 DATABASE INFO
+    const allUsers = await usersData.getAll();
+    const allThreads = await threadsData.getAll();
 
-    const power = Math.floor(Math.random() * 100);
+    const totalUsers = allUsers.length;
+    const totalThreads = allThreads.length;
 
-    const missions = [
-      "Complete 150 messages 💬",
-      "Stay active for 2 hours ⏳",
-      "Chat with 5 friends 😄",
-      "Win a Free Fire match 🎮"
-    ];
-    const mission = missions[Math.floor(Math.random() * missions.length)];
+    // 💬 THREAD INFO
+    const threadInfo =
+      await api.getThreadInfo(event.threadID);
 
+    const groupName =
+      threadInfo.threadName || "Unknown";
+
+    const members =
+      threadInfo.participantIDs.length;
+
+    const admins =
+      threadInfo.adminIDs.length;
+
+    // 💬 MESSAGE COUNTS
+    const threadData =
+      await threadsData.get(event.threadID);
+
+    const groupMessages =
+      threadData?.messageCount ||
+      threadData?.messages ||
+      0;
+
+    const botID = api.getCurrentUserID();
+
+    const botData =
+      await usersData.get(botID);
+
+    const botMessages =
+      botData?.messageCount ||
+      botData?.messages ||
+      0;
+
+    // ⏱ UPTIME
     const uptime = process.uptime();
-    const upH = Math.floor(uptime / 3600);
-    const upM = Math.floor((uptime % 3600) / 60);
 
-    const prefix = global.GoatBot?.config?.prefix || "!";
-    const commands = global.GoatBot?.commands?.size || "Unknown";
+    const upDays = Math.floor(uptime / 86400);
 
-    const ram = (os.totalmem() / 1024 / 1024 / 1024).toFixed(2);
-    const freeRam = (os.freemem() / 1024 / 1024 / 1024).toFixed(2);
+    const upHours = Math.floor(
+      (uptime % 86400) / 3600
+    );
+
+    const upMinutes = Math.floor(
+      (uptime % 3600) / 60
+    );
+
+    // 💻 SYSTEM INFO
     const cpu = os.cpus()[0].model;
 
-    const uid = "SIYAM-" + Math.floor(Math.random() * 999999);
-    const streak = Math.floor(Math.random() * 30) + 1;
+    const cores = os.cpus().length;
+
+    const totalRam = (
+      os.totalmem() /
+      1024 /
+      1024 /
+      1024
+    ).toFixed(2);
+
+    const freeRam = (
+      os.freemem() /
+      1024 /
+      1024 /
+      1024
+    ).toFixed(2);
+
+    const usedRam = (
+      totalRam - freeRam
+    ).toFixed(2);
+
+    const platform = os.platform();
+
+    const hostname = os.hostname();
+
+    const architecture = os.arch();
 
     const ping = Date.now() - start;
 
-    const security = ["🔐 Secure", "⚠️ Risk", "🛡 Protected"];
-    const secStatus = security[Math.floor(Math.random() * security.length)];
+    // 📊 RAM BAR
+    const ramPercent = Math.floor(
+      (usedRam / totalRam) * 10
+    );
 
-    const network = Math.floor(Math.random() * 100) + " Mbps 🚀";
-    const aiStatus = ["🤖 Online", "🧠 Learning", "⚡ Fast Mode"][Math.floor(Math.random() * 3)];
+    const ramBar =
+      "█".repeat(ramPercent) +
+      "░".repeat(10 - ramPercent);
 
-    const ranks = ["Bronze 🥉", "Silver 🥈", "Gold 🥇", "Diamond 💎", "Legend 👑"];
-    const rank = ranks[Math.floor(Math.random() * ranks.length)];
+    // 🌐 STATUS
+    const network =
+      ping < 100
+        ? "🚀 SUPER FAST"
+        : ping < 300
+        ? "⚡ FAST"
+        : "🐢 SLOW";
 
-    const badges = ["🎖 Elite", "🔥 Pro", "💎 VIP", "⚡ Speedster"];
-    const badge = badges[Math.floor(Math.random() * badges.length)];
-
-    const music = ["🎧 Alone Night", "🎵 Sad Vibes", "🔥 Gaming Beat", "💔 Broken Heart"];
-    const nowPlaying = music[Math.floor(Math.random() * music.length)];
-
-    const serverLoad = Math.floor(Math.random() * 100) + "%";
-
-    const powerBar = "▰".repeat(Math.floor(power / 10)) + "▱".repeat(10 - Math.floor(power / 10));
-    const xpBar = "█".repeat(Math.floor(xp / 15)) + "░".repeat(10 - Math.floor(xp / 15));
-
-    const luck = Math.floor(Math.random() * 100);
-    const iq = Math.floor(Math.random() * 80) + 80;
-
-    const relationship = ["💖 Secret Crush", "💔 Broken", "😎 Single Boss", "😍 In Love"];
-    const loveStatus = relationship[Math.floor(Math.random() * relationship.length)];
-
-    const energy = Math.floor(Math.random() * 100);
-    const energyBar = "█".repeat(Math.floor(energy / 10)) + "░".repeat(10 - Math.floor(energy / 10));
-
-    const achievements = [
-      "🏆 Chat King",
-      "🔥 Daily Grinder",
-      "💎 VIP Member",
-      "⚡ Fast Responder"
-    ];
-    const achievement = achievements[Math.floor(Math.random() * achievements.length)];
-
-    const coins = Math.floor(Math.random() * 5000);
-    const gems = Math.floor(Math.random() * 200);
-
-    const language = ["🇧🇩 Bangla", "🇺🇸 English", "🌐 Mixed"];
-    const lang = language[Math.floor(Math.random() * language.length)];
-
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const serverStatus =
+      usedRam < totalRam / 2
+        ? "🟢 STABLE"
+        : "🟠 BUSY";
 
     const text = `
-╔══════════════════════════════╗
-        💎 SIYAM PREMIUM CARD 💎
-╚══════════════════════════════╝
+╔══════════════╗
+ 👑 𝗦𝗜𝗬𝗔𝗠 𝗕𝗢𝗧 👑
+╚══════════════╝
 
-👤 UDAY HASAN SIYAM
-🎖 Rank: ${rank}
-🏅 Badge: ${badge}
-🆔 ${uid}
+╭━━━━━━━━━━━━━━━━╮
+┃ 👑OWNER INFORMATION
+╰━━━━━━━━━━━━━━━━╯
 
-━━━━━━━━━━━━━━━━━━
+👤 𝐎𝐖𝐍𝐄𝐑 ➤ 𝐒𝐈𝐘𝐀𝐌 𝐇𝐀𝐒𝐀𝐍
+🏠 𝐇𝐎𝐌𝐄 ➤ 𝐊𝐈𝐒𝐇𝐎𝐑𝐄𝐆𝐀𝐍𝐉
+📚 𝐂𝐋𝐀𝐒𝐒 ➤ 𝐍𝐄𝐖 𝐓𝐄𝐍
+🔥 𝐀𝐆𝐄 ➤ 17+
+🏫 𝐒𝐂𝐇𝐎𝐎𝐋 ➤ 𝐌 𝐀 𝐌𝐀𝐍𝐍𝐀𝐍 𝐌𝐀𝐍𝐈𝐊 𝐇𝐈𝐆𝐇 𝐒𝐂𝐇𝐎𝐎𝐋
 
-📍 Kishoreganj, Bangladesh
-🎓 Class: Ten
-🎂 Age: 17+
-💔 Status: Single
+━━━━━━━━━━━━━━━━━━━━
 
-━━━━━━━━━━━━━━━━━━
+╭━━━━━━━━━━━━━━━━╮
+┃ 🤖BOT INFORMATION
+╰━━━━━━━━━━━━━━━━╯
 
-📅 ${date}
-⏰ ${time}
-${dayStatus}
-🌍 Zone: ${zone}
+⚙️ BOT NAME ➤ 👑𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧
+📌 PREFIX ➤ ${prefix}
+📦 COMMANDS ➤ ${commands}
+🎛 EVENT CMDS ➤ ${events}
 
-🌦 ${weather}
-🌧 Rain: ${rainTime}
-
-━━━━━━━━━━━━━━━━━━
-
-📊 Activity
-💬 ${msgCount} Messages
-⏳ ${hours} Hours Active
-
-📈 Level ${level}
-${xpBar} (${xp}/150 XP)
-
-🔥 Streak: ${streak} Days
+👥 TOTAL USERS ➤ ${totalUsers}
+💬 TOTAL GROUPS ➤ ${totalThreads}
 
 ━━━━━━━━━━━━━━━━━━
 
-❤️ ${mood}
-💘 Love: ${loveStatus}
-⚡ Power: ${power}%
-${powerBar}
+╭━━━━━━━━━━━━━━━━╮
+┃💬GROUP INFORMATION
+╰━━━━━━━━━━━━━━━━╯
 
-🔋 Energy: ${energy}%
-${energyBar}
+🏷 GROUP NAME ➤ ${groupName}
+👤 MEMBERS ➤ ${members}
+🛡 ADMINS ➤ ${admins}
 
-🎯 ${mission}
-
-━━━━━━━━━━━━━━━━━━
-
-🧠 Stats
-🍀 Luck: ${luck}%
-🧠 IQ: ${iq}
-🏆 Achievement: ${achievement}
-
-💰 Coins: ${coins}
-💎 Gems: ${gems}
+📨 GROUP MSG ➤ ${groupMessages}
+🤖 BOT MSG ➤ ${botMessages}
 
 ━━━━━━━━━━━━━━━━━━
 
-🤖 System Info
-⚙️ Prefix: ${prefix}
-📦 Commands: ${commands}
-⏱ Uptime: ${upH}h ${upM}m
-📡 Ping: ${ping}ms
+╭━━━━━━━━━━━━━━━╮
+┃ ⏰ LIVE STATUS
+╰━━━━━━━━━━━━━━━╯
 
-💻 CPU: ${cpu}
-🧠 RAM: ${freeRam}GB / ${ram}GB
+📅 DATE ➤ ${date}
+⏰ TIME ➤ ${time}
+🌍 TIMEZONE ➤ ${timezone}
 
-🌐 Network: ${network}
-🛡 Security: ${secStatus}
-⚡ AI Status: ${aiStatus}
+${mode}
 
-🎵 Now Playing: ${nowPlaying}
-📊 Server Load: ${serverLoad}
-🌍 Language: ${lang}
+━━━━━━━━━━━━━━━━
+
+╭━━━━━━━━━━━━━━━━━╮
+┃💻SYSTEM INFORMATION
+╰━━━━━━━━━━━━━━━━━╯
+
+🖥 PLATFORM ➤ ${platform}
+⚙️ ARCH ➤ ${architecture}
+🌐 HOSTNAME ➤ ${hostname}
+
+💻 CPU ➤
+${cpu}
+
+🧠 CPU CORES ➤ ${cores}
+
+🧠 RAM USAGE ➤
+${usedRam}GB / ${totalRam}GB
+
+${ramBar}
+
+━━━━━━━━━━━━━━━━━
+
+╭━━━━━━━━━━━━━━━━╮
+┃ 📡 PERFORMANCE
+╰━━━━━━━━━━━━━━━━╯
+
+⚡ PING ➤ ${ping}ms
+🌐 NETWORK ➤ ${network}
+🛡 SERVER ➤ ${serverStatus}
+
+⏱ UPTIME ➤
+${upDays}D ${upHours}H ${upMinutes}M
+
+━━━━━━━━━━━━━━━━━━
+
+╭━━━━━━━━━━━━━━━━╮
+┃ 🖥️LIVE BOT STATUS
+╰━━━━━━━━━━━━━━━━╯
+
+🟢 BOT STATUS ➤ ONLINE
+⚡ RESPONSE ➤ ACTIVE
+🚀 SPEED ➤ PERFECT
+💎 VERSION ➤ 9.0
+🔒 SECURITY ➤ ENABLED
+
+━━━━━━━━━━━━━━━━━━
+
+👑 OWNER ➤ 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
 `;
 
     return message.reply(text);
