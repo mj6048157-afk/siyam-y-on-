@@ -14,9 +14,9 @@
   "language": "en",
   "notesLanguage": "change language using ISO 639-1 code",
 
-  "nickNameBot": "─꯭‎— [,] 🤖 𝆠፝𝐍𝐈𝐉𝐇𝐔𝐌-𝐂𝐇𝐀𝐓-𝐁𝐎𝐓 🤖:)>𝟑",
+  "nickNameBot": "─꯭‎— [,] 👑 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧 ✨:)>𝟑",
 
-  "prefix": "/",
+  "prefix": ",",
 
   "adminOnly": {
     "enable": false,
@@ -25,7 +25,7 @@
 
   "adminBot": [
     "61589656899295",
-    "61583490928333"
+    "61589656899295"
   ],
 
   "security": {
@@ -46,7 +46,7 @@
     "enable": false,
     "whiteListIds": [
       "61589656899295",
-      "61583490928333"
+      "61589656899295"
     ],
     "notes": "If enabled, only IDs in whiteListIds can use the bot."
   },
