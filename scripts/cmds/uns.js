@@ -15,7 +15,7 @@ module.exports = {
     countDown: 0,
     role: 0,
     shortDescription: "Auto trigger + unsend",
-    longDescription: "No prefix trigger system",
+    longDescription: "Only exact trigger works",
     category: "system",
     guide: "No Prefix"
   },
@@ -30,8 +30,14 @@ module.exports = {
 
       if (!body || typeof body !== "string") return;
 
-      // 🔥 শুধু একদম একা ট্রিগার হলে কাজ করবে
-      const text = body.trim();
+      // 🔥 শুধু একদম এই ট্রিগার গুলাই কাজ করবে
+      const text = body.trim().toLowerCase();
+
+      // 🔥 Allowed Exact Triggers
+      const triggers = ["s", "siyam", "u", "un"];
+
+      // ❌ অন্য কিছু থাকলে কাজ করবে না
+      if (!triggers.includes(text)) return;
 
       // 🔥 Bot Message Reply = Auto Delete
       if (
@@ -43,9 +49,9 @@ module.exports = {
         } catch (e) {}
       }
 
-      // 🔥 Separate Exact Triggers Only
+      // 🔥 Exact Trigger Replies
 
-      if (/^s$/i.test(text)) {
+      if (text === "s") {
         return api.sendMessage(
           "🙄হায়রে ডিলিট কইরা দিলি ☹️",
           threadID,
@@ -53,7 +59,7 @@ module.exports = {
         );
       }
 
-      if (/^siyam$/i.test(text)) {
+      if (text === "siyam") {
         return api.sendMessage(
           "👑 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑",
           threadID,
@@ -61,7 +67,7 @@ module.exports = {
         );
       }
 
-      if (/^u$/i.test(text)) {
+      if (text === "u") {
         return api.sendMessage(
           "😹আমার বস সিয়াম 😻",
           threadID,
@@ -69,7 +75,7 @@ module.exports = {
         );
       }
 
-      if (/^un$/i.test(text)) {
+      if (text === "un") {
         return api.sendMessage(
           "ডিলেট সম্পন্ন ✅",
           threadID,
