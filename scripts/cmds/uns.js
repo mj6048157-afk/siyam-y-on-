@@ -28,9 +28,10 @@ module.exports = {
     try {
       const { threadID, messageID, body, messageReply } = event;
 
-      if (!body) return;
+      if (!body || typeof body !== "string") return;
 
-      const text = body.toLowerCase().trim();
+      // 🔥 শুধু একদম একা ট্রিগার হলে কাজ করবে
+      const text = body.trim();
 
       // 🔥 Bot Message Reply = Auto Delete
       if (
@@ -42,8 +43,9 @@ module.exports = {
         } catch (e) {}
       }
 
-      // 🔥 Separate Triggers
-      if (text === "s") {
+      // 🔥 Separate Exact Triggers Only
+
+      if (/^s$/i.test(text)) {
         return api.sendMessage(
           "🙄হায়রে ডিলিট কইরা দিলি ☹️",
           threadID,
@@ -51,7 +53,7 @@ module.exports = {
         );
       }
 
-      if (text === "siyam") {
+      if (/^siyam$/i.test(text)) {
         return api.sendMessage(
           "👑 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑",
           threadID,
@@ -59,7 +61,7 @@ module.exports = {
         );
       }
 
-      if (text === "u") {
+      if (/^u$/i.test(text)) {
         return api.sendMessage(
           "😹আমার বস সিয়াম 😻",
           threadID,
@@ -67,7 +69,7 @@ module.exports = {
         );
       }
 
-      if (text === "uns") {
+      if (/^un$/i.test(text)) {
         return api.sendMessage(
           "ডিলেট সম্পন্ন ✅",
           threadID,
