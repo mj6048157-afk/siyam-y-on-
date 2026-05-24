@@ -1,115 +1,306 @@
 module.exports = {
+
   config: {
     name: "allgroup",
     aliases: ["allgc"],
-    version: "1.4.1",
+    version: "2.0",
     role: 2,
     author: "亗 SIYAM HASAN 亗",
-    description: "Manage all groups: List, Leave, or Add yourself to any group.",
+    description: "Premium All Group Panel",
     category: "admin",
+    countDown: 5,
     guide: {
-        en: "{pn}",
-        bn: "{pn}"
-    },
-    countDown: 5
-  },
-
-  // 🔐 AUTHOR LOCK SYSTEM
-  onLoad: function () {
-    const AUTHOR = "亗 SIYAM HASAN 亗";
-
-    if (module.exports.config.author !== AUTHOR) {
-      console.log("⛔ AUTHOR LOCK TRIGGERED!");
-      console.log("🚫 File has been modified. Bot disabled this module.");
-
-      // optional hard stop (you can remove if not needed)
-      module.exports.config.name = "disabled";
-      module.exports.onStart = () => {};
-      module.exports.onReply = () => {};
-
-      throw new Error("Author name changed! File locked.");
+      en: "{pn}"
     }
   },
 
-/* --- [ 🔐 ADMIN MODULE ] --- */
+  // =========================
+  // START COMMAND
+  // =========================
 
-  onStart: async function ({ api, event, message, commandName }) {
+  onStart: async function ({
+    api,
+    event,
+    message,
+    commandName
+  }) {
+
     try {
-      await api.getThreadList(25, null, ["INBOX"], (err, list) => {
-        if (err) return message.reply("Error: Could not fetch group list.");
 
-        const groups = list.filter(g => g.isGroup && g.isSubscribed);
-        if (groups.length === 0) return message.reply("The bot is not in any groups.");
+      const list = await api.getThreadList(
+        100,
+        null,
+        ["INBOX"]
+      );
 
-        let msg = "📊 [ ALL GROUPS MANAGEMENT ]\n\n";
-        let groupIDs = [];
+      if (!list || !Array.isArray(list))
+        return message.reply(
+          "❌ Failed to fetch group list."
+        );
 
-        groups.forEach((group, index) => {
-          const name = group.name || "Unnamed Group";
-          const members = group.participantIDs ? group.participantIDs.length : "0";
-          msg += `${index + 1}. ${name}\n🆔 ID: ${group.threadID}\n👥 Members: ${members}\n\n`;
-          groupIDs.push(group.threadID);
-        });
+      const groups = list.filter(
+        item =>
+          item.isGroup &&
+          item.threadID != event.threadID
+      );
 
-        msg += '🎮 Actions:\n1. Reply "out <num>" to leave.\n2. Reply "add <num>" to join group.\n3. Reply "ban <num>" to block group.';
+      if (!groups.length)
+        return message.reply(
+          "❌ Bot is not added in any group."
+        );
 
-        return message.reply(msg, (err, info) => {
-          global.GoatBot.onReply.set(info.messageID, {
-            commandName,
-            messageID: info.messageID,
-            author: event.senderID,
-            groupIDs
-          });
-        });
-      });
-    } catch (e) {
-      return message.reply("An unexpected error occurred.");
+      let msg =
+`╔𝐑𝐎𝐘𝐀𝐋 𝐆𝐑𝐎𝐔𝐏 𝐏𝐀𝐍𝐄𝐋╗
+┃
+┃ 🌟 𝐀𝐋𝐋 𝐆𝐑𝐎𝐔𝐏 𝐋𝐈𝐒𝐓 🌟
+┃         👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 👑
+┃
+┃      👑 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
+┃
+╠═══════════════╣
+`;
+
+      const saveGroup = [];
+
+      for (let i = 0; i < groups.length; i++) {
+
+        const group = groups[i];
+
+        const name =
+          group.name || "Unnamed Group";
+
+        const members =
+          group.participantIDs
+            ? group.participantIDs.length
+            : 0;
+
+        msg +=
+`┃ 💎 ${i + 1} ➤ ${name}
+┃ 🆔 𝐆𝐂 𝐈𝐃 ➤ ${group.threadID}
+┃ 👥 𝐌𝐄𝐌𝐁𝐄𝐑 ➤ ${members}
+┃
+`;
+
+        saveGroup.push(group.threadID);
+
+      }
+
+      msg +=
+`╠══════════════╣
+┃  𝐑𝐄𝐏𝐋𝐘 𝐂𝐎𝐍𝐓𝐑𝐎𝐋 𝐏𝐀𝐍𝐄𝐋 
+┃
+┃ 🚪 out 1
+┃ ➤ Leave Selected Group
+┃
+┃ ➕ add 2
+┃ ➤ Add Yourself In Group
+┃
+┃ 🚫 ban 3
+┃ ➤ Ban & Auto Leave Group
+┃
+┃  ═══════════════╣
+┃ 🤖 𝐁𝐎𝐓   ➤  𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧 
+┃ 👑 𝐎𝐖𝐍𝐄𝐑    
+┃  ☠️  ➤  𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
+┃ 💠 𝐏𝐑𝐄𝐅𝐈𝐗 ➤ 【,】
+┃
+╚  👑 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧👑 ╝`;
+
+      const info =
+        await message.reply(msg);
+
+      global.GoatBot.onReply.set(
+        info.messageID,
+        {
+          commandName,
+          author: event.senderID,
+          groupData: saveGroup
+        }
+      );
+
     }
+
+    catch (err) {
+
+      console.log(err);
+
+      return message.reply(
+        "❌ System Error:\n" +
+        err.message
+      );
+
+    }
+
   },
 
-  onReply: async function ({ api, event, Reply, message, threadsData }) {
-    const { author, groupIDs } = Reply;
-    if (event.senderID != author) return;
+  // =========================
+  // REPLY SYSTEM
+  // =========================
 
-    const input = event.body.split(" ");
-    const action = input[0].toLowerCase();
-    const index = parseInt(input[1]) - 1;
-    const targetID = groupIDs[index];
+  onReply: async function ({
+    api,
+    event,
+    Reply,
+    message,
+    threadsData
+  }) {
 
-    if (!targetID || isNaN(index)) return message.reply("Invalid selection.");
+    try {
 
-    if (action === "out") {
-      try {
-        await api.removeUserFromGroup(api.getCurrentUserID(), targetID);
-        return message.reply(`✅ Left group: ${targetID}`);
-      } catch {
-        return message.reply("❌ Cannot leave group.");
+      if (
+        event.senderID != Reply.author
+      ) return;
+
+      const args =
+        event.body.trim().split(/\s+/);
+
+      const cmd =
+        args[0]?.toLowerCase();
+
+      const num =
+        parseInt(args[1]);
+
+      if (!cmd || isNaN(num))
+        return message.reply(
+          "❌ Invalid reply format."
+        );
+
+      const threadID =
+        Reply.groupData[num - 1];
+
+      if (!threadID)
+        return message.reply(
+          "❌ Group not found."
+        );
+
+      // =====================
+      // OUT SYSTEM
+      // =====================
+
+      if (cmd === "out") {
+
+        try {
+
+          await api.removeUserFromGroup(
+            api.getCurrentUserID(),
+            threadID
+          );
+
+          return message.reply(
+`╔══════════════╗
+┃ ✅ LEFT SUCCESS
+┃ 🆔 ${threadID}
+╚══════════════╝`
+          );
+
+        }
+
+        catch {
+
+          return message.reply(
+            "❌ Failed to leave group."
+          );
+
+        }
+
       }
+
+      // =====================
+      // ADD SYSTEM
+      // =====================
+
+      if (cmd === "add") {
+
+        try {
+
+          await api.addUserToGroup(
+            event.senderID,
+            threadID
+          );
+
+          return message.reply(
+`╔══════════════╗
+┃ ✅ ADD SUCCESS
+┃ 🆔 ${threadID}
+╚══════════════╝`
+          );
+
+        }
+
+        catch {
+
+          return message.reply(
+            "❌ Failed to add user."
+          );
+
+        }
+
+      }
+
+      // =====================
+      // BAN SYSTEM
+      // =====================
+
+      if (cmd === "ban") {
+
+        try {
+
+          const oldData =
+            await threadsData.get(threadID);
+
+          if (!oldData.data)
+            oldData.data = {};
+
+          oldData.data.banned = true;
+
+          await threadsData.set(
+            threadID,
+            oldData.data,
+            "data"
+          );
+
+          await api.sendMessage(
+            "🚫 This group has been banned.",
+            threadID
+          );
+
+          await api.removeUserFromGroup(
+            api.getCurrentUserID(),
+            threadID
+          );
+
+          return message.reply(
+`╔══════════════╗
+┃ 🚫 BAN SUCCESS
+┃ 🆔 ${threadID}
+╚══════════════╝`
+          );
+
+        }
+
+        catch {
+
+          return message.reply(
+            "❌ Failed to ban group."
+          );
+
+        }
+
+      }
+
     }
 
-    if (action === "add") {
-      try {
-        await api.addUserToGroup(author, targetID);
-        return message.reply(`✅ Added you to: ${targetID}`);
-      } catch {
-        return message.reply("❌ Cannot add user.");
-      }
+    catch (err) {
+
+      console.log(err);
+
+      return message.reply(
+        "❌ Reply Error:\n" +
+        err.message
+      );
+
     }
 
-    if (action === "ban") {
-      try {
-        const data = await threadsData.get(targetID);
-        if (!data.data) data.data = {};
-        data.data.banned = true;
-        await threadsData.set(targetID, data.data, "data");
-
-        await api.sendMessage("🚫 This group is banned.", targetID);
-        await api.removeUserFromGroup(api.getCurrentUserID(), targetID);
-
-        return message.reply(`✅ Banned: ${targetID}`);
-      } catch {
-        return message.reply("❌ Failed to ban group.");
-      }
-    }
   }
+
 };
