@@ -5,8 +5,8 @@ const getStreamFromURL = global.utils.getStreamFromURL;
 
 // ✅ VIDEO LIST
 const gifList = [
-	"https://files.catbox.moe/6j9t8b.mp4",
-	"https://files.catbox.moe/78abck.mp4"
+	"https://files.catbox.moe/78abck.mp4",
+	"https://files.catbox.moe/r8nam4.mp4"
 ];
 
 // ✅ per-thread toggle storage
@@ -126,7 +126,7 @@ module.exports = {
 
 		return message.reply({
 			body:
-`╭━━━〔《𓆩𝐏𝐑𝐄𝐅𝐈𝐗 𝐏𝐀𝐍𝐄𝐋𓆪》〕━━━╮
+`╭━〔《𓆩𝐏𝐑𝐄𝐅𝐈𝐗 𝐏𝐀𝐍𝐄𝐋𓆪》〕━╮
 ┃ 🏷️ 𓆩𝐆𝐑𝐎𝐔𝐏𓆪: ${groupName}
 ┃ 🔰 𓆩𝐒𝐘𝐒𝐓𝐄𝐌𓆪: ${systemPrefix}
 ┃ 💬 𓆩𝐆𝐑𝐎𝐔𝐏𓆪: ${groupPrefix}
@@ -134,7 +134,7 @@ module.exports = {
 ┃ 📅 𓆩𝐃𝐀𝐓𝐄𓆪: ${date}
 ┃ 👑 𓆩𝐎𝐖𝐍𝐄𝐑𓆪: ${owner}
 ┃ ⚡ 𓆩𝐒𝐓𝐀𝐓𝐔𝐒𓆪: ONLINE
-╰━━━〔《𓆩𝐍𝐈𝐉𝐇𝐔𝐌𓆪》〕━━━╯`,
+╰━〔《𓆩𝐍𝐈𝐉𝐇𝐔𝐌𓆪》〕━╯`,
 			attachment: gif
 		});
 	}
