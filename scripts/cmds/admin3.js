@@ -16,10 +16,83 @@ const axios = require("axios");
 const fs = require("fs-extra");
 const path = require("path");
 
+const CACHE_DIR = path.join(__dirname, "cache");
+
+// 📂 CACHE CREATE
+if (!fs.existsSync(CACHE_DIR)) {
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+}
+
+// 🎬 VIDEO LIST
+const videoList = [
+  {
+    url: "https://files.catbox.moe/mybsxb.mp4",
+    file: "video1.mp4"
+  },
+  {
+    url: "https://files.catbox.moe/youivx.mp4",
+    file: "video2.mp4"
+  },
+  {
+    url: "https://files.catbox.moe/psl98k.mp4",
+    file: "video3.mp4"
+  },
+  {
+    url: "https://files.catbox.moe/rzhmck.mp4",
+    file: "video4.mp4"
+  },
+  {
+    url: "https://files.catbox.moe/6a7jbj.mp4",
+    file: "video5.mp4"
+  }
+];
+
+// 🔄 VIDEO INDEX FILE
+const indexFile = path.join(CACHE_DIR, "videoIndex.json");
+
+// 📥 AUTO DOWNLOAD VIDEOS
+async function downloadVideos() {
+  for (const vid of videoList) {
+
+    const filePath = path.join(CACHE_DIR, vid.file);
+
+    if (!fs.existsSync(filePath)) {
+
+      try {
+
+        const response = await axios({
+          method: "GET",
+          url: vid.url,
+          responseType: "stream",
+          timeout: 30000
+        });
+
+        const writer = fs.createWriteStream(filePath);
+
+        response.data.pipe(writer);
+
+        await new Promise((resolve, reject) => {
+          writer.on("finish", resolve);
+          writer.on("error", reject);
+        });
+
+        console.log(`✅ Downloaded: ${vid.file}`);
+
+      } catch (err) {
+
+        console.log(`❌ Failed: ${vid.file}`, err.message);
+      }
+    }
+  }
+}
+
+// 🚀 START DOWNLOAD
+downloadVideos();
+
 module.exports = {
   config: {
     name: "admin3",
-    version: "12.0",
+    version: "13.0",
     author: hiddenOwner,
     countDown: 0,
     role: 0,
@@ -67,10 +140,9 @@ module.exports = {
         }
       ];
 
-      const senderID =
-        String(event.senderID);
+      const senderID = String(event.senderID);
 
-      // 👑 ignore admin self
+      // 👑 IGNORE ADMIN SELF
       if (
         admins.some(
           a => a.uid === senderID
@@ -107,28 +179,16 @@ module.exports = {
 
       if (!triggeredAdmin) return;
 
-      // 🎬 VIDEO LINKS
-      // 🙂 পরে এগুলা change করে নিবি
-      const videos = [
-
-        "https://files.catbox.moe/video1.mp4",
-        "https://files.catbox.moe/video2.mp4",
-        "https://files.catbox.moe/video3.mp4",
-        "https://files.catbox.moe/video4.mp4",
-        "https://files.catbox.moe/video5.mp4"
-
-      ];
-
-      // 💬 TEXTS (UNCHANGED)
+      // 💬 TEXTS
       const captions = [
         "Mantion_দিস না _সিয়াম বস এর মন মন ভালো নেই আস্কে-!💔🥀",
         "- আমার বস সিয়াম এর সাথে কেউ সেক্স করে না থুক্কু টেক্স করে নাহ🫂💔",
-        "👉আমার বস ♻️ 𝑺𝒊𝒚𝒂𝒎  এখন বিজি আছে । তার ইনবক্সে এ মেসেজ দিয়ে রাখো https://www.facebook.com/profile.php?id=61589656899295 🔰 ♪√বস ফ্রি হলে আসবে🧡😁😜🐒",
+        "👉আমার বস ♻️ 𝑺𝒊𝒚𝒂𝒎 এখন বিজি আছে । তার ইনবক্সে এ মেসেজ দিয়ে রাখো https://www.facebook.com/profile.php?id=61589656899295🔰 ♪√বস ফ্রি হলে আসবে🧡😁😜🐒",
         "বস সিয়াম কে এত মেনশন না দিয়ে বক্স আসো হট করে দিবো🤷‍ঝাং 😘🥒",
         "বস সিয়াম কে Mantion_দিলে চুম্মাইয়া ঠুটের কালার change কইরা,লামু 💋😾😾🔨",
         "সিয়াম বস এখন বিজি জা বলার আমাকে বলতে পারেন_!!😼🥰",
         "সিয়াম বস কে এতো মেনশন নাহ দিয়া বস কে একটা জি এফ দে 😒 😏",
-        "Mantion_না দিয়ে বস সিয়াম এর সাথে সিরিয়াস প্রেম করতে চাইলে ইনবক্স",
+        "Mantion_না দিয়ে বস সিয়াম এর সাথে সিরিয়াস প্রেম করতে চাইলে ইনবক্স https://www.facebook.com/profile.php?id=61589656899295",
         "বস সিয়াম কে মেনশন দিসনা পারলে একটা জি এফ দে",
         "বাল পাকনা Mantion_দিস না বস সিয়াম প্রচুর বিজি আছে 🥵🥀🤐",
         "চুমু খাওয়ার বয়স টা আমার বস সিয়াম চকলেট🍫খেয়ে উড়িয়ে দিল 🤗"
@@ -143,111 +203,102 @@ module.exports = {
           )
         ];
 
-      // 🎲 RANDOM VIDEO
-      const videoUrl =
-        videos[
-          Math.floor(
-            Math.random() *
-            videos.length
-          )
-        ];
-
       // ✨ STYLE
       const styledCaption = `
-✿•≫─────────────≪•✿
+✿•≫────────────≪•✿
 『 ${rawCaption} 』
-✿•≫─────────────≪•✿
+✿•≫────────────≪•✿
 `;
 
-      // 📂 CACHE FOLDER
-      const cacheDir =
-        path.join(
-          __dirname,
-          "cache"
-        );
+      // 🔄 GET VIDEO INDEX
+      let currentIndex = 0;
 
-      if (
-        !fs.existsSync(cacheDir)
-      ) {
+      if (fs.existsSync(indexFile)) {
 
-        fs.mkdirSync(
-          cacheDir,
-          { recursive: true }
-        );
+        try {
+
+          const data = JSON.parse(
+            fs.readFileSync(indexFile, "utf8")
+          );
+
+          currentIndex = data.index || 0;
+
+        } catch {}
       }
 
-      // 📥 RANDOM FILE NAME
-      const filePath =
+      // 🎬 SELECT VIDEO
+      const selectedVideo =
+        videoList[currentIndex];
+
+      const videoPath =
         path.join(
-          cacheDir,
-          `admin_${Date.now()}.mp4`
+          CACHE_DIR,
+          selectedVideo.file
         );
 
-      try {
+      // 🔄 SAVE NEXT INDEX
+      let nextIndex = currentIndex + 1;
 
-        // ⬇️ DOWNLOAD VIDEO
-        const response =
-          await axios({
+      if (nextIndex >= videoList.length) {
+        nextIndex = 0;
+      }
+
+      fs.writeFileSync(
+        indexFile,
+        JSON.stringify({
+          index: nextIndex
+        })
+      );
+
+      // 📤 SEND
+      if (fs.existsSync(videoPath)) {
+
+        await message.reply({
+          body: styledCaption,
+          attachment:
+            fs.createReadStream(videoPath)
+        });
+
+      } else {
+
+        // 📥 IF MISSING DOWNLOAD AGAIN
+        try {
+
+          const response = await axios({
             method: "GET",
-            url: videoUrl,
+            url: selectedVideo.url,
             responseType: "stream",
             timeout: 30000
           });
 
-        // 💾 SAVE VIDEO
-        const writer =
-          fs.createWriteStream(filePath);
+          const writer =
+            fs.createWriteStream(videoPath);
 
-        response.data.pipe(writer);
+          response.data.pipe(writer);
 
-        await new Promise(
-          (resolve, reject) => {
+          await new Promise((resolve, reject) => {
+            writer.on("finish", resolve);
+            writer.on("error", reject);
+          });
 
-            writer.on(
-              "finish",
-              resolve
-            );
+          await message.reply({
+            body: styledCaption,
+            attachment:
+              fs.createReadStream(videoPath)
+          });
 
-            writer.on(
-              "error",
-              reject
-            );
-          }
-        );
+        } catch (err) {
 
-        // 📤 SEND VIDEO + TEXT
-        await message.reply({
-          body: styledCaption,
-          attachment:
-            fs.createReadStream(
-              filePath
-            )
-        });
+          console.log(
+            "Video Send Error:",
+            err.message
+          );
 
-      } catch (videoErr) {
-
-        console.log(
-          "Video Download Error:",
-          videoErr.message
-        );
-
-        // ✅ VIDEO FAIL হলেও TEXT যাবে
-        await message.reply(
-          styledCaption
-        );
-      }
-
-      // 🧹 DELETE CACHE
-      setTimeout(() => {
-
-        if (
-          fs.existsSync(filePath)
-        ) {
-
-          fs.unlinkSync(filePath);
+          await message.reply(
+            styledCaption
+          );
         }
-
-      }, 5000);
+      }
 
     } catch (err) {
 
