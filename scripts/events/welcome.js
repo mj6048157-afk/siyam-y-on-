@@ -26,7 +26,7 @@ const backgroundCache = new Map();
 
 let welcomeToggle = 0;
 
-// ✅ Welcome Video Cache Folder
+// 🚬 Welcome Video Cache Folder
 const cacheFolder = path.join(__dirname, "welcome_cache_videos");
 
 async function cacheVideos() {
