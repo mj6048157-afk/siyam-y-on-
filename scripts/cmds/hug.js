@@ -1,86 +1,116 @@
-const fs = require("fs");
+const fs = require("fs-extra");
 const path = require("path");
 const axios = require("axios");
-const { loadImage, createCanvas } = require("canvas");
+const jimp = require("jimp");
 
-module.exports = {
-  config: {
-    name: "hug",
-    aliases: ["hug"],
-    version: "1.1",
-    author: "Amit Max ⚡",
-    countDown: 5,
-    role: 0,
-    shortDescription: "Give someone a hug!",
-    longDescription: "A fun command to give someone a hug with a picture.",
-    category: "fun",
-    guide: "{pn} @mention or reply",
-  },
+module.exports.config = {
+  name: "hug",
+  version: "3.1.1",
+  permission: 0,
+  credits: "Joy",
+  description: "Hug someone 🥰",
+  prefix: true,
+  category: "canvas",
+  usages: "hug @mention",
+  cooldowns: 5
+};
 
-  onStart: async function ({ event, api, usersData }) {
-    let mention = Object.keys(event.mentions)[0];
-    let targetID = mention || event.messageReply?.senderID;
+module.exports.onLoad = async () => {
+  const dir = path.join(__dirname, "cache", "canvas");
+  const filePath = path.join(dir, "hugv1.png");
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(filePath)) {
+    const image = (await axios.get(
+      "https://drive.google.com/uc?id=1D5g9o1ICiqw4TmjsRg2g6dBGb2Pkg1EH",
+      { responseType: "arraybuffer" }
+    )).data;
 
-    if (!targetID)
-      return api.sendMessage("Who would you like to hug? Please tag someone or reply to a message!", event.threadID, event.messageID);
-
-    const huggerID = event.senderID;
-
-    const getAvatar = async (uid) => {
-      try {
-        const url = `https://graph.facebook.com/${uid}/picture?width=512&height=512&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
-        const avatarPath = path.join(__dirname, `${uid}_avatar.png`);
-        const res = await axios.get(url, { responseType: "arraybuffer" });
-        fs.writeFileSync(avatarPath, res.data);
-        return avatarPath;
-      } catch (err) {
-        console.error(`Error fetching avatar for user ${uid}: ${err.message}`);
-        return "";
-      }
-    };
-
-    const bg = await loadImage("https://i.imgur.com/eUNHCj3.jpeg");
-    const canvas = createCanvas(bg.width, bg.height);
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(bg, 0, 0);
-
-    const huggerAvatarPath = await getAvatar(huggerID);
-    const targetAvatarPath = await getAvatar(targetID);
-
-    const huggerAvatar = await loadImage(huggerAvatarPath);
-    const targetAvatar = await loadImage(targetAvatarPath);
-
-    
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(285, 110, 50, 0, Math.PI * 2);  
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(huggerAvatar, 235, 60, 100, 100);  
-    ctx.restore();
-
-    
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(460, 160, 50, 0, Math.PI * 2);  
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(targetAvatar, 410, 110, 100, 100);  
-
-    const output = path.join(__dirname, "hug_output.png");
-    fs.writeFileSync(output, canvas.toBuffer("image/png"));
-
-    const senderName = await usersData.getName(huggerID);
-    const targetName = event.mentions[mention] || (event.messageReply?.senderName || "Friend");
-
-    api.sendMessage({
-      body: `😍 I've just hugged ${targetName}! \n${senderName} is giving a warm hug to ${targetName}!`,
-      attachment: fs.createReadStream(output),
-      mentions: [{ tag: targetName, id: targetID }],
-}, event.threadID, () => {
-      fs.unlinkSync(output);
-      fs.unlinkSync(huggerAvatarPath);
-      fs.unlinkSync(targetAvatarPath);
-    }, event.messageID);
+    fs.writeFileSync(filePath, image);
   }
 };
+
+async function circle(imagePath) {
+  const image = await jimp.read(imagePath);
+  image.circle();
+  return await image.getBufferAsync("image/png");
+}
+
+async function makeImage({ one, two }) {
+  const __root = path.join(__dirname, "cache", "canvas");
+  const bg = await jimp.read(path.join(__root, "hugv1.png"));
+
+  const pathImg = path.join(__root, `hug_${one}_${two}.png`);
+  const avatarOnePath = path.join(__root, `avt_${one}.png`);
+  const avatarTwoPath = path.join(__root, `avt_${two}.png`);
+
+  const getAvatar = async (uid, savePath) => {
+    const avatarBuffer = (await axios.get(
+      `https://graph.facebook.com/${uid}/picture?width=512&height=512&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`,
+      { responseType: "arraybuffer" }
+    )).data;
+
+    fs.writeFileSync(savePath, Buffer.from(avatarBuffer));
+  };
+
+  await getAvatar(one, avatarOnePath);
+  await getAvatar(two, avatarTwoPath);
+
+  const circleOne = await jimp.read(await circle(avatarOnePath));
+  const circleTwo = await jimp.read(await circle(avatarTwoPath));
+
+  bg.composite(circleOne.resize(150, 150), 320, 100);
+  bg.composite(circleTwo.resize(130, 130), 280, 280);
+
+  const finalImg = await bg.getBufferAsync("image/png");
+  fs.writeFileSync(pathImg, finalImg);
+
+  fs.unlinkSync(avatarOnePath);
+  fs.unlinkSync(avatarTwoPath);
+
+  return pathImg;
+}
+
+function stylishCaption(name) {
+  return `╭╼|━━━━━━━━━━━━|╾╮\n🤗 ${name} তোমাকে কে একটুখানি হাগ দিলাম 🥰\n╰╼|━━━━━━━━━━━━|╾╯`;
+}
+
+module.exports.run = async function ({ api, event }) {
+  const { threadID, messageID, senderID, mentions } = event;
+  const mentionIDs = Object.keys(mentions);
+
+  if (mentionIDs.length === 0) {
+    return api.sendMessage(
+      `╭╼|━━━━━━━━━━━━━━|╾╮\n🥺 দয়া করে একজনকে মেনশন করো যাকে হাগ দিতে চাও!\n╰╼|━━━━━━━━━━━━━━|╾╯`,
+      threadID,
+      messageID
+    );
+  }
+
+  const one = senderID;
+  const two = mentionIDs[0];
+  const name = mentions[two].replace("@", "");
+
+  try {
+    const imgPath = await makeImage({ one, two });
+
+    api.sendMessage(
+      {
+        body: stylishCaption(name),
+        attachment: fs.createReadStream(imgPath)
+      },
+      threadID,
+      () => fs.unlinkSync(imgPath),
+      messageID
+    );
+  } catch (err) {
+    console.error(err);
+    return api.sendMessage(
+      `╭╼|━━━━━━━━━━━━━━|╾╮\n❌ ছবিটি তৈরি করতে সমস্যা হয়েছে। পরে আবার চেষ্টা করো!\n╰╼|━━━━━━━━━━━━━━|╾╯`,
+      threadID,
+      messageID
+    );
+  }
+};
+
+/* ✅ FRAMEWORK FIX */
+module.exports.onStart = module.exports.run;
