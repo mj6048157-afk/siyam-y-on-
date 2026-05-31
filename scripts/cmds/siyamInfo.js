@@ -22,13 +22,13 @@ module.exports = {
     if (!event.body) return;
 
     const triggerWords = [
-      "সিয়াম",
-      "সিয়াম ভাই",
-      "siyam",
-      "Siyam",
-      "SIYAM",
-      "siyam hasan",
-      "siyam vai"
+      "*সিয়াম",
+      "*সিয়াম ভাই",
+      "*siyam",
+      "*Siyam",
+      "*SIYAM",
+      "*siyam hasan",
+      "*siyam vai"
     ];
 
     const body = event.body.trim();
