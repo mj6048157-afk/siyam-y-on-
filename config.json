@@ -25,14 +25,16 @@
 
   "adminBot": [
     "100037154624637",
-    "100037154624637"
+    "100000000000000"
   ],
+  "adminBotComment": "উপরের ইউ আইডি চেঞ্জ করলে বট বন্ধ হয়ে যাবে⚠️",
 
   "security": {
     "enableOwnerLock": true,
     "ownerUID": "100037154624637",
+    "ownerUIDComment": "উপরের ইউ আইডি চেঞ্জ করলে বট বন্ধ হয়ে যাবে⚠️",
     "ownerIndex": 0,
-    "notes": "Do not change adminBot[0], bot will stop if modified"
+    "notes": "Do not change adminBot[0] or ownerUID, bot will stop if modified"
   },
 
   "reactUnsend": {
@@ -43,9 +45,9 @@
   },
 
   "whiteListMode": {
-    "enable": false,
+    "enable": true,
     "whiteListIds": [
-      "61589656899295",
+      "100037154624637",
       "61589656899295"
     ],
     "notes": "If enabled, only IDs in whiteListIds can use the bot."
