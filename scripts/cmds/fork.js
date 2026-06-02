@@ -1,7 +1,3 @@
-const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
-
 module.exports = {
   config: {
     name: "fork",
@@ -10,61 +6,73 @@ module.exports = {
     author: "SIYAM",
     countDown: 3,
     role: 0,
-    shortDescription: "Premium Video Sender",
-    longDescription: "Auto download and send premium video",
-    category: "media",
+    shortDescription: "GOAT BOT V2 Information",
+    longDescription: "Shows GOAT BOT V2 information and contact details",
+    category: "info",
     guide: {
       en: "{pn}"
     }
   },
 
   onStart: async function ({ message }) {
-    const cacheDir = path.join(__dirname, "cache");
-    const filePath = path.join(cacheDir, "fork_video.mp4");
+    return message.reply(`
+╭━━━━━━━━━━━━━━━╮
+  🚀 𝐆𝐎𝐀𝐓 𝐁𝐎𝐓 ⚡ 𝐕𝟐 ⚡
+╰━━━━━━━━━━━━━━━╯
+👑 𝐁𝐎𝐓 𝐎𝐖𝐍𝐄𝐑 :
+𓆩👑 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑𓆪
+━━━━━━━━━━━━━━
+🌟 𝐅𝐄𝐀𝐓𝐔𝐑𝐄𝐒 :
+✅ 𝐏𝐑𝐄𝐌𝐈𝐔𝐌 𝐒𝐘𝐒𝐓𝐄𝐌
+✅ 𝐀𝐃𝐕𝐀𝐍𝐂𝐄𝐃 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒
+✅ 𝐄𝐀𝐒𝐘 𝐃𝐄𝐏𝐋𝐎𝐘
+✅ 𝐆𝐈𝐓𝐇𝐔𝐁 𝐀𝐂𝐓𝐈𝐎𝐍𝐒 𝐒𝐔𝐏𝐏𝐎𝐑𝐓
+✅ 𝐑𝐄𝐍𝐃𝐄𝐑 𝐒𝐔𝐏𝐏𝐎𝐑𝐓
+✅ 𝐑𝐀𝐈𝐋𝐖𝐀𝐘 𝐒𝐔𝐏𝐏𝐎𝐑𝐓
+✅ 𝐅𝐔𝐓𝐔𝐑𝐄 𝐔𝐏𝐃𝐀𝐓𝐄𝐒
+━━━━━━━━━━━━━━
+📢 গুরুত্বপূর্ণ নোট 📢
+🎬 আপাতত টাইটেল ভিডিও দেওয়া নেই।
 
-    try {
+⏳ পরবর্তীতে টাইটেল ভিডিও যোগ করা হবে।
 
-      // cache folder create
-      if (!fs.existsSync(cacheDir)) {
-        fs.mkdirSync(cacheDir, { recursive: true });
-      }
+📂 Fork-এর ভিতরে প্রয়োজনীয় ফাইল/রিসোর্স দেওয়া আছে।
+🔍 সেগুলো দেখে নিজে ট্রাই করে নিতে পারেন।
 
-      // 🌟 Premium Loading Message
-      const loading = await message.reply(`
-╭━〔 ⚡ SYSTEM ⚡ 〕━╮
-┃ ⏳ আরে মামা দাঁড়াও দিতেছি...
-╰━━━━━━━━━━━━━━━━╯
+💡 কোনো সমস্যা হলে বা অতিরিক্ত সাহায্যের প্রয়োজন 
+🤗 হলে নিচে দেওয়া হোয়াটসঅ্যাপ 
+🛸 নাম্বার অথবা ফেসবুকে যোগাযোগ করুন।
+
+🙏 ধন্যবাদ সবাইকে।
+━━━━━━━━━━━━━━━
+
+💎 𝐏𝐎𝐖𝐄𝐑𝐄𝐃 𝐁𝐘
+
+👑 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
+
+❤️ 𝐓𝐇𝐀𝐍𝐊𝐒 𝐅𝐎𝐑 𝐔𝐒𝐈𝐍𝐆 𝐆𝐎𝐀𝐓-𝐁𝐎𝐓 ⚡ 𝐕𝟐 ⚡
+
+━━━━━━━━━━━━━━━
+
+📱 𝐖𝐇𝐀𝐓𝐒𝐀𝐏𝐏
+অথবা
+
+🌐 Facebook-এ যোগাযোগ করুন 📥
+
+অথবা ইনবক্সে "fork" লিখুন দিয়ে দিবে 🎁
+
+আমার অটো বট সিস্টেম 💖
+
+আশা করি বটটি ব্যবহার করে অনেক আনন্দ পাবেন
+
+★━━━━━━━━━━━━━★
+
+📱 𝐖𝐇𝐀𝐓𝐒𝐀𝐏𝐏 : +8801789138157
+
+⫷━━━━━━━━━━━━━⫸
+
+🌐 𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊 𝐎𝐅𝐅𝐈𝐂𝐈𝐀𝐋
+https://www.facebook.com/profile.php?id=100037154624637
 `);
-
-      // 🎥 Google Drive Direct Video Link
-      const videoUrl =
-        "https://files.catbox.moe/lakl90.mp4";
-
-      // download video
-      const response = await axios.get(videoUrl, {
-        responseType: "arraybuffer"
-      });
-
-      fs.writeFileSync(filePath, Buffer.from(response.data));
-
-      // ✅ Send video + text together
-      await message.reply({
-        body: "এই নাও মামা ✋ হাত মারো🥵",
-        attachment: fs.createReadStream(filePath)
-      });
-
-      // 🗑️ Delete loading message
-      if (loading && loading.messageID) {
-        message.unsend(loading.messageID);
-      }
-
-      // 🧹 Delete cache file
-      fs.unlinkSync(filePath);
-
-    } catch (err) {
-      console.error("Fork Command Error:", err);
-
-      return message.reply("❌ ভিডিও পাঠাতে সমস্যা হয়েছে!");
-    }
   }
 };
