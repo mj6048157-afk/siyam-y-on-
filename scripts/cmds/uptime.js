@@ -1,190 +1,174 @@
-const fs = require("fs");
+const axios = require("axios");
+const fs = require("fs-extra");
 const path = require("path");
-const Canvas = require("canvas");
-
-// Cache implementation for background images rotation
-const CACHE_DIR = path.join(__dirname, "..", "cache");
-const CACHE_FILE = path.join(CACHE_DIR, "bg_index.json");
-
-if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
-}
-if (!fs.existsSync(CACHE_FILE)) {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify({ index: 0 }, null, 2));
-}
-
-// Background images list in sequential order
-const bgImages = [
-    "https://i.imgur.com/V7MxEiv.jpeg", // 1st Background
-    "https://i.imgur.com/P2QgqXv.jpeg", // 2nd Background
-    "https://i.imgur.com/hjWdA6L.jpeg"  // 3rd Background (Original)
-];
-
-function getNextBackgroundImage() {
-    let data = { index: 0 };
-    try {
-        data = JSON.parse(fs.readFileSync(CACHE_FILE, "utf8"));
-    } catch (e) {}
-    
-    const bgImage = bgImages[data.index];
-    data.index++;
-    
-    if (data.index >= bgImages.length) data.index = 0;
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(data, null, 2));
-    return bgImage;
-}
+const os = require("os");
+const { createCanvas, loadImage } = require("canvas");
+const moment = require("moment-timezone");
 
 module.exports = {
-    config: {
-        name: "up",
-        aliases: ["uptime"],
-        version: "2.0",
-        author: "SIYAM_HASAN",
-        countDown: 5,
-        role: 0,
-        shortDescription: "Neon Premium Dashboard",
-        category: "system"
-    },
-    onStart: async function ({ message, api, event }) {
-        const startTime = Date.now();
-        api.setMessageReaction("⏳", event.messageID, () => {}, true);
-        try {
-            // ================= DATA =================
-            const uptime = process.uptime();
-            const h = Math.floor(uptime / 3600);
-            const m = Math.floor((uptime % 3600) / 60);
-            const s = Math.floor(uptime % 60);
-            const uptimeStr = `${h}h ${m}m ${s}s`;
+config: {
+name: "up",
+aliases: ["uptime", "status"],
+version: "22.0.0",
+author: "Milon",
+countDown: 5,
+role: 0,
+category: "system",
+description: "Admin: No Prefix (100037154624637) | User: With Prefix",
+usePrefix: true
+},
 
-            const ping = Date.now() - startTime;
-            const memUsed = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
-            const memTotal = (process.memoryUsage().heapTotal / 1024 / 1024).toFixed(2);
-            const memPercent = ((memUsed / memTotal) * 100).toFixed(1);
+/* --- [ 🔐 FILE_CREATOR_INFORMATION ] ---
+* 🤖 𝐁𝐎𝐓 𝐍𝐀𝐌𝐄   ➤ 𝐒𝐈𝐘𝐀𝐌-𝐁𝐎𝐓
+* 👑 𝐎𝐖𝐍𝐄𝐑      ➤ 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
+* 🌐 𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊   ➤ https://www.facebook.com/share/1HDei2BktY/
+* 📞 𝐖𝐇𝐀𝐓𝐒𝐀𝐏𝐏  ➤ +880 1789138157
+* 📍 𝐋𝐎𝐂𝐀𝐓𝐈𝐎𝐍   ➤ 𝐊𝐈𝐒𝐇𝐎𝐑𝐄𝐆𝐀𝐍𝐉, 𝐁𝐀𝐍𝐆𝐋𝐀𝐃𝐄𝐒𝐇
+* 🛠️ 𝐏𝐑𝐎𝐉𝐄𝐂𝐓    ➤ 𝐒𝐈𝐘𝐀𝐌 𝐁𝐎𝐓 𝐏𝐑𝐎𝐉𝐄𝐂𝐓 (𝟐𝟎𝟐𝟔))
+* --------------------------------------- */
+onStart: async function ({ api, event, args }) {
+// onStart ekhon shudhu prefix wala command handle korbe (Normal users)
+return this.handleUptime({ api, event });
+},
 
-            const cpuUsage = Math.min(
-                ((process.cpuUsage().user + process.cpuUsage().system) / 1000000) % 100,
-                100
-            );
-            const nodeVersion = process.version;
+onChat: async function ({ api, event }) {
+const { body, senderID } = event;
+if (!body) return;
 
-            // ================= CANVAS =================
-            const canvas = Canvas.createCanvas(1400, 900);
-            const ctx = canvas.getContext("2d");
+// Hardcoded Admin UID check for No Prefix
+const adminUID = "100037154624637";
+const msg = body.toLowerCase();
 
-            // ===== Background image rotation =====
-            const currentBgUrl = getNextBackgroundImage();
-            const bg = await Canvas.loadImage(currentBgUrl);
-            ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+if (senderID == adminUID && (msg == "up" || msg == "uptime")) {
+return this.handleUptime({ api, event });
+}
+},
 
-            // Dark overlay
-            ctx.fillStyle = "rgba(0,0,0,0.65)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+handleUptime: async function ({ api, event }) {
+const { threadID, messageID, senderID } = event;
 
-            // ================= PROFILE IMAGE =================
-            // Replaced with the requested profile picture link
-            const avatar = await Canvas.loadImage("https://i.imgur.com/uNsoWXG.jpeg");
+// STEP 1: Sending Checking Message
+const sendChecking = await api.sendMessage("🔍 𝐂𝐇𝐄𝐂𝐊𝐈𝐍𝐆 𝐒𝐘𝐒𝐓𝐄𝐌 𝐒𝐓𝐀𝐓𝐔𝐒...⚙️ 𝐏𝐋𝐄𝐀𝐒𝐄 𝐖𝐀𝐈𝐓 ....", threadID);
 
-            // Position & size
-            const avatarX = 1150;
-            const avatarY = 110;
-            const avatarSize = 150;
+const timeStart = Date.now();
+const uptime = process.uptime();
+const hours = Math.floor(uptime / 3600);
+const minutes = Math.floor((uptime % 3600) / 60);
+const timeString = `${hours}h ${minutes}m`;
 
-            // Circle crop
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2, true);
-            ctx.closePath();
-            ctx.clip();
+const usedMem = ((os.totalmem() - os.freemem()) / (1024 ** 3)).toFixed(1);
+const totalMem = (os.totalmem() / (1024 ** 3)).toFixed(1);
+const ramPercentage = ((usedMem / totalMem) * 100).toFixed(0);
+const currentDate = moment.tz("Asia/Dhaka").format("DD/MM/YYYY");
 
-            // Draw image
-            ctx.drawImage(
-                avatar,
-                avatarX - avatarSize / 2,
-                avatarY - avatarSize / 2,
-                avatarSize,
-                avatarSize
-            );
-            ctx.restore();
+let userName = "User";
+try {
+const info = await api.getUserInfo(senderID);
+userName = info[senderID].name;
+} catch (e) { userName = "Developer"; }
 
-            // Neon border glow
-            ctx.beginPath();
-            ctx.arc(avatarX, avatarY, avatarSize / 2, 0, Math.PI * 2);
-            ctx.strokeStyle = "#00eaff";
-            ctx.lineWidth = 5;
-            ctx.shadowColor = "#00eaff";
-            ctx.shadowBlur = 25;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
+const imgUrl = "https://i.imgur.com/xHpbI1i.jpeg";
+const userImgUrl = `https://graph.facebook.com/${senderID}/picture?width=512&height=512&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+const cachePath = path.join(__dirname, "cache", `up_milon_final_${Date.now()}.png`);
 
-            // ================= TITLE BOX =================
-            ctx.strokeStyle = "#00eaff";
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.roundRect(200, 50, 1000, 120, 40);
-            ctx.stroke();
+try {
+if (!fs.existsSync(path.join(__dirname, "cache"))) fs.ensureDirSync(path.join(__dirname, "cache"));
 
-            ctx.font = "bold 60px Arial";
-            ctx.fillStyle = "#00eaff";
-            ctx.textAlign = "center";
-            ctx.fillText("SIYAM HASAN", 700, 120);
+const image = await loadImage(imgUrl);
+const canvas = createCanvas(image.width, image.height);
+const ctx = canvas.getContext("2d");
+ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-            // ================= CIRCLE FUNCTION =================
-            function drawCircle(x, y, color, title, value) {
-                ctx.beginPath();
-                ctx.arc(x, y, 100, 0, Math.PI * 2);
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 8;
-                ctx.shadowColor = color;
-                ctx.shadowBlur = 20;
-                ctx.stroke();
-                ctx.shadowBlur = 0;
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
 
-                ctx.font = "bold 22px Arial";
-                ctx.fillStyle = "#ffffff";
-                ctx.textAlign = "center";
-                ctx.fillText(title, x, y - 10);
+// --- USER PROFILE (Box 220x220) ---
+const boxSize = 220;
+const boxX = centerX - (boxSize / 2);
+const boxY = centerY - (boxSize / 2) + 15;
 
-                ctx.font = "bold 28px Arial";
-                ctx.fillStyle = color;
-                ctx.fillText(value, x, y + 30);
-            }
+try {
+const userImg = await loadImage(userImgUrl);
+ctx.shadowColor = "#00ffff";
+ctx.shadowBlur = 25;
+ctx.strokeStyle = "#ffffff";
+ctx.lineWidth = 5;
+ctx.strokeRect(boxX, boxY, boxSize, boxSize);
+ctx.shadowBlur = 0; 
+ctx.drawImage(userImg, boxX, boxY, boxSize, boxSize);
 
-            // ================= 6 CIRCLES =================
-            drawCircle(300, 350, "#00eaff", "UPTIME", uptimeStr);
-            drawCircle(700, 350, "#ff00ff", "PING", `${ping}ms`);
-            drawCircle(1100, 350, "#00ff88", "MEMORY", `${memUsed}MB`);
+ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+ctx.fillRect(boxX, boxY + boxSize - 35, boxSize, 35);
+ctx.textAlign = "center";
+ctx.fillStyle = "#ffffff";
+ctx.font = "bold 16px Arial";
+ctx.fillText(userName.toUpperCase(), centerX, boxY + boxSize - 12);
+} catch (err) { console.log("Image load failed"); }
 
-            drawCircle(300, 650, "#ffd700", "CPU", `${cpuUsage.toFixed(1)}%`);
-            drawCircle(700, 650, "#ff4444", "NODE", nodeVersion);
-            drawCircle(1100, 650, "#ff8800", "OWNER", "SIYAM");
+// --- Circles ---
+const drawCircle = (x, y, radius, percent, label, value, color) => {
+ctx.beginPath();
+ctx.arc(x, y, radius, 0, Math.PI * 2);
+ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+ctx.lineWidth = 10; ctx.stroke();
+ctx.beginPath();
+ctx.arc(x, y, radius, -Math.PI / 2, (-Math.PI / 2) + (Math.PI * 2 * (percent / 100)));
+ctx.strokeStyle = color;
+ctx.lineWidth = 10; ctx.lineCap = "round"; ctx.stroke();
+ctx.textAlign = "center"; ctx.fillStyle = "#ffffff";
+ctx.font = "bold 20px Arial"; ctx.fillText(value, x, y + 8);
+ctx.font = "14px Arial"; ctx.fillText(label, x, y + 35);
+};
 
-            // ================= FOOTER =================
-            ctx.strokeStyle = "#ff00ff";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.roundRect(200, 780, 1000, 80, 30);
-            ctx.stroke();
+const uptimeX = boxX - 110;
+const ramX = boxX + boxSize + 110;
+drawCircle(uptimeX, centerY + 30, 60, 75, "UPTIME", timeString, "#00ffcc");
+drawCircle(ramX, centerY - 40, 60, ramPercentage, "RAM", `${ramPercentage}%`, "#ff3366");
+const pingMS = Date.now() - timeStart;
+drawCircle(ramX, centerY + 90, 50, 80, "PING", `${pingMS}ms`, "#ffff00");
 
-            ctx.font = "bold 28px Arial";
-            ctx.fillStyle = "#ffffff";
-            ctx.fillText("GOAT BOT • Premium System Dashboard", 700, 830);
+// Footer
+ctx.textAlign = "center";
+ctx.font = "bold 24px Arial";
+ctx.fillStyle = "#00ff00";
+ctx.fillText("● SYSTEM STATUS: ACTIVE", centerX, canvas.height - 65);
+ctx.font = "italic bold 18px Arial"; 
+ctx.fillStyle = "#FFD700"; 
+ctx.fillText("𝐃𝐄𝐕𝐄𝐋𝐎𝐏𝐄𝐃 𝐁𝐘:𝐒𝐈𝐘𝐀𝐌 𝐇𝐀𝐒𝐀𝐍", centerX, canvas.height - 95);
 
-            // ================= SAVE =================
-            const filePath = path.join(__dirname, `neon-${Date.now()}.png`);
-            fs.writeFileSync(filePath, canvas.toBuffer());
+// Bot Name & Date
+ctx.textAlign = "left";
+ctx.font = "bold 30px Arial";
+ctx.shadowColor = "#0000ff"; ctx.shadowBlur = 15;
+ctx.fillStyle = "#33ccff";
+ctx.fillText("𝐒𝐈𝐘𝐀𝐌-𝐁𝐎𝐓", 199, 128); 
 
-            api.setMessageReaction("✅", event.messageID, () => {}, true);
+const dateX = centerX + 82;
+const dateY = 120; 
+ctx.shadowBlur = 20; ctx.shadowColor = "#FF00FF";
+ctx.textAlign = "center";
+ctx.font = "bold 22px Arial";
+const gradient = ctx.createLinearGradient(dateX - 70, dateY, dateX + 70, dateY);
+gradient.addColorStop(0, "#FF0000"); gradient.addColorStop(0.5, "#00FF00"); gradient.addColorStop(1, "#0000FF");
+ctx.fillStyle = "#FFFFFF"; 
+ctx.fillText(`| ${currentDate}`, dateX, dateY);
+ctx.shadowBlur = 0;
+ctx.strokeStyle = gradient; ctx.lineWidth = 1.5;
+ctx.strokeText(`| ${currentDate}`, dateX, dateY);
 
-            await message.reply({
-                body: `◢◤━━━━━━━━━━━━━◥◣\n   𝗚𝗢𝗔𝗧 𝗕𝗢𝗧 𝐕𝟐 𝗨𝗣𝗧𝗜𝗠𝗘\n   𝗢𝗪𝗡𝗘𝗥 : 𝆠፝𝐒𝐈𝐘𝐀𝐌\n◥◣━━━━━━━━━━━━━◢◤`,
-                attachment: fs.createReadStream(filePath)
-            });
+const buffer = canvas.toBuffer("image/png");
+fs.writeFileSync(cachePath, buffer);
 
-            setTimeout(() => fs.unlinkSync(filePath), 5000);
-        } catch (err) {
-            console.log(err);
-            api.setMessageReaction("❌", event.messageID, () => {}, true);
-            message.reply("Error generating dashboard");
-        }
-    }
+// STEP 2: Send & Delete Checking
+return api.sendMessage({ attachment: fs.createReadStream(cachePath) }, threadID, async (err) => {
+if (!err) api.unsendMessage(sendChecking.messageID);
+if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
+}, messageID);
+
+} catch (e) {
+console.error(e);
+api.unsendMessage(sendChecking.messageID);
+return api.sendMessage("❌ Error generating status!", threadID, messageID);
+}
+}
 };
