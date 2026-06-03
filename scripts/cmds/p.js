@@ -42,7 +42,7 @@ module.exports = {
       if (isCancel) {
         api.removeUserFromGroup(api.getCurrentUserID(), group.threadID);
       } else {
-        api.sendMessage("『 𝐌𝐄𝐋𝐈𝐒𝐒𝐀 𝐁𝐎𝐓 』\n\n✦ Bot activated successfully\n✦ Group: " + group.name + "\n\n➤ Owner: 𝗕𝗮𝗱𝗵𝗼𝗻", group.threadID);
+        api.sendMessage("『 👑 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧 』\n\n✦ Bot activated successfully\n✦ Group: " + group.name + "\n\n➤ Owner: 𓆩👑𝐒𝐈𝐘𝐀𝐌-👑𓆪", group.threadID);
       }
       count++;
     }
@@ -72,7 +72,7 @@ module.exports = {
         msg += `✦ ${i+1}. ${g.name}\n`;
       });
 
-      msg += "\n› Reply: 1 2 - Approve\n› Reply: c 1 2 - Cancel\n› Reply: -all - Approve All\n\n➤ Owner: 𝗕𝗮𝗱𝗵𝗼𝗻";
+      msg += "\n› Reply: 1 2 - Approve\n› Reply: c 1 2 - Cancel\n› Reply: -all - Approve All\n\n➤ Owner: 𓆩👑𝐒𝐈𝐘𝐀𝐌-👑𓆪";
 
       try { await api.unsendMessage(event.messageID); } catch (e) {}
 
