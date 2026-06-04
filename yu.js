@@ -43,7 +43,7 @@ module.exports.onStart = async function ({ api, event, args }) {
         for (let i = 0; i < allUsers.length; i++) {
             // চেক করা হচ্ছে অ্যাডমিন অফ করতে বলেছে কিনা
             if (!global.yuCommandStatus[threadID]) {
-                return api.sendMessage("❌ মেনশন করা অফ করা হয়েছে। সিয়াম বস ", threadID);
+                return api.sendMessage("❌ মেনশন করা অফ করা হয়েছে। সিয়াম বস ", threadID);
             }
 
             const id = allUsers[i];
@@ -64,7 +64,7 @@ module.exports.onStart = async function ({ api, event, args }) {
             }
         }
 
-        // শেষ হলে স্ট্যাটাস ডিলিট করে দেওয়া
+        // শেষ হলে স্ট্যাটাস ডিলিট করে দেওয়া
         delete global.yuCommandStatus[threadID];
         return api.sendMessage("✅ সবাইকে mention করা শেষ।", threadID);
 
@@ -75,16 +75,12 @@ module.exports.onStart = async function ({ api, event, args }) {
     }
 };
 
-// এই ফাংশনটি গ্রুপে 'off' বা 'stop' লিখলে সেটা ডিটেক্ট করবে
+// অনচ্যাট ফাংশন
 module.exports.onChat = async function ({ api, event }) {
     if (!event || !event.threadID || !event.body) return;
-    const { threadID, body, senderID } = event;
+    const { threadID, body } = event;
 
-    // মেসেজ যদি off বা stop হয় এবং মেনশন রানিং থাকে
     if ((body.toLowerCase() === "off" || body.toLowerCase() === "stop") && global.yuCommandStatus[threadID]) {
-        
-        // শুধুমাত্র যে কমান্ড দিতে পারে (Admin/Role 1) সেই অফ করতে পারবে
-        // (এখানে আপনি চাইলে threadInfo থেকে চেক করতে পারেন, তবে সহজে স্টপ করার জন্য এটি দেওয়া)
         global.yuCommandStatus[threadID] = false;
     }
 };
