@@ -1,4 +1,4 @@
-,cmd install fork.js module.exports = {
+module.exports = {
   config: {
     name: "fork",
     aliases: ["repo", "link"],
