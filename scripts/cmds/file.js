@@ -18,7 +18,7 @@ module.exports = {
   onStart: async function ({ args, message, event }) {
 
     // 🔐 ONLY YOUR UID CAN USE
-    const ownerUID = "100037154624637";
+    const ownerUID = "61590360434650";
 
     const isAdmin = event.senderID === ownerUID;
 
