@@ -1,45 +1,104 @@
+const fs = require("fs");
+const path = require("path");
+
+const ADMIN_UIDS = [
+  "61590360434650"
+];
+
+const PASSWORDS = [
+  "1024", "1458", "1960", "2048", "2233",
+  "2401", "2580", "2718", "3001", "3210",
+  "3456", "3698", "4040", "4321", "4567",
+  "5005", "5123", "5555", "6006", "6789",
+  "7007", "7124", "7777", "8080", "8123",
+  "8754", "8888", "9009", "9321", "9999",
+  "1111", "2222", "3333", "4444", "6666"
+];
+
 module.exports = {
   config: {
     name: "fork",
     aliases: ["repo", "link"],
-    version: "4.2",
+    version: "5.0",
     author: "SIYAM",
     countDown: 3,
     role: 0,
     shortDescription: "GOAT BOT V2 Information",
-    longDescription: "Shows GOAT BOT V2 information and contact details",
+    longDescription: "Shows GOAT BOT V2 information and password system",
     category: "info",
-    guide: { en: "{pn}" }
+    guide: {
+      en: "{pn} <password>\n{pn} list"
+    }
   },
 
-  onStart: async function ({ message, args, api }) {
-    const validPasswords = ["19602", "24245653", "01608043961"];
-    const userPassword = args[0];
+  onStart: async function ({ message, args, event, api }) {
+    const dataDir = path.join(__dirname, "fork_data.json");
 
-    if (!userPassword)
-      return message.reply("🔐 দয়া করে সিয়াম ভাই তোমার পার্সোনাল পাসওয়ার্ড দাও। উদাহরণ: fork 196122");
-
-    if (!validPasswords.includes(userPassword))
-      return message.reply("🖕এ মাদারচোদ বট তোর বাপের! 😌আবার চেষ্টা করো যদি সিয়াম বস হও 🤧");
-
-    // লোডিং মেসেজ পাঠানো
-    let loadingMsg = await message.reply("⏳ 𝗟𝗢𝗔𝗗𝗜𝗡𝗚 · 𝗣𝗟𝗘𝗔𝗦𝗘 𝗪𝗔𝗜𝗧.....");
-
-    // ৩ সেকেন্ড ওয়েট করার পর লোডিং মেসেজটি ডিলিট হবে
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // মেসেজ ডিলিট করার চেষ্টা
-    try {
-      if (loadingMsg.unsend) {
-        await loadingMsg.unsend();
-      } else if (api && loadingMsg.messageID) {
-        await api.unsendMessage(loadingMsg.messageID);
-      }
-    } catch (e) {
-      console.error("Error deleting loading message:", e);
+    if (!fs.existsSync(dataDir)) {
+      fs.writeFileSync(
+        dataDir,
+        JSON.stringify({ usedPasswords: [] }, null, 2)
+      );
     }
 
-    // মেইন ফর্ক তথ্য দেখানো
+    const data = JSON.parse(fs.readFileSync(dataDir));
+
+    // fork list
+    if (args[0] === "list") {
+      if (!ADMIN_UIDS.includes(event.senderID)) {
+        return message.reply("❌ এই কমান্ড শুধুমাত্র 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍-এর জন্য।☺️");
+      }
+
+      let listText = "🔐 PASSWORD LIST\n\n";
+
+      for (const pass of PASSWORDS) {
+        const used = data.usedPasswords.includes(pass);
+        listText += `${used ? "❌" : "✅"} ${pass}\n`;
+      }
+
+      return message.reply(listText);
+    }
+
+    const userPassword = args[0];
+
+    if (!userPassword) {
+      return message.reply(
+        "🔐 Password দিন\n\nউদাহরণ:\nfork 1950"
+      );
+    }
+
+    if (!PASSWORDS.includes(userPassword)) {
+      return message.reply("❌ গরিবের দল 🌝 ঠিক পাসওয়ার্ড দে আমার বস 𓆩👑𝐒𝐈𝐘𝐀𝐌-👑𓆪এর চাম**চা💩🔪!");
+    }
+
+    if (data.usedPasswords.includes(userPassword)) {
+      return message.reply(
+        "❌ এই Password ইতিমধ্যে ব্যবহার করা হয়েছে😝 গরিবের দল ☹️🤛!"
+      );
+    }
+
+    data.usedPasswords.push(userPassword);
+
+    if (data.usedPasswords.length >= PASSWORDS.length) {
+      data.usedPasswords = [];
+    }
+
+    fs.writeFileSync(dataDir, JSON.stringify(data, null, 2));
+
+    const loading = await message.reply(
+      "⏳ 𝗟𝗢𝗔𝗗𝗜𝗡𝗚 • 𝗣𝗟𝗘𝗔𝗦𝗘 𝗪𝗔𝗜𝗧..."
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    try {
+      if (loading?.messageID) {
+        await api.unsendMessage(loading.messageID);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+
     return message.reply(`
 ╭━━━━━━━━━━━━━━━╮
 🚀 𝐆𝐎𝐀𝐓 𝐁𝐎𝐓 ⚡ 𝐕𝟐 ⚡
@@ -47,28 +106,24 @@ module.exports = {
 👑 𝐁𝐎𝐓 𝐎𝐖𝐍𝐄𝐑 :
 𓆩👑 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑𓆪
 ━━━━━━━━━━━━━━
-📢 গুরুত্বপূর্ণ নোট 📢
+📢 গুরুত্বপূর্ণ নোট
 🎬 আপাতত টাইটেল ভিডিও নেই।
 ⏳ পরবর্তীতে টাইটেল ভিডিও দেওয়া হবে।
-📂 Fork-এর ভিতরে প্রয়োজনীয় ফাইল/রিসোর্স দেওয়া আছে।
-🔍 সেগুলো দেখে নিজে ট্রাই করে নিতে পারেন।
-💡 কোনো সমস্যা হলে অথবা সাহায্যের প্রয়োজন
-🤗 হলে নিচে দেওয়া হোয়াটসঅ্যাপ
-🛸 নাম্বার অথবা ফেসবুকে যোগাযোগ করুন।
-🙏 ধন্যবাদ সবাইকে।
-━━━━━━━━━━━━━━━
-💎 𝐏𝐎𝐖𝐄𝐑𝐄𝐃 𝐁𝐘
-👑 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
-𝐔𝐒𝐈𝐍𝐆 𝐆𝐎𝐀𝐓-𝐁𝐎𝐓 ⚡ 𝐕𝟐 ⚡
-━━━━━━━━━━━━━━━
-🔰 𝐎𝐅𝐅𝐈𝐂𝐈𝐀𝐋 𝐑𝐄𝐏𝐎 ➜ https://github.com/siyam-crypto/mdsiyam-God--Bot-v5.git
+📂 Fork-এর ভিতরে প্রয়োজনীয় ফাইল দেওয়া আছে।
+🔍 নিজে ট্রাই করে নিতে পারেন।
+━━━━━━━━━━━━━━
+💎 POWERED BY
+👑 SIYAM-HASAN 👑
 
-★━━━━━━━━━━━━━★
-📱 𝐖𝐇𝐀𝐓𝐒𝐀𝐏𝐏 : +8801789138157
-⫷━━━━━━━━━━━━━⫸
+🔰 OFFICIAL REPO
+https://github.com/siyam-crypto/mdsiyam-God--Bot-v5.git
+━━━━━━━━━━━━━━
 
-🌐 𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊 𝐎𝐅𝐅𝐈𝐂𝐈𝐀𝐋
-https://www.facebook.com/profile.php?id=100037154624637
+📱 WHATSAPP :
++8801789138157
+
+🌐 FACEBOOK :
+https://www.facebook.com/profile.php?id=61590360434650
 `);
   }
 };
