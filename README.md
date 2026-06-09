@@ -30,7 +30,7 @@
 
 ---
 
-## ⚡ 𝐆𝐎𝐀𝐓-𝐁𝐎𝐓-𝐕𝟐 ⚡
+## ⚡ 𝐆𝐎𝐀𝐓-𝐁𝐎𝐓-𝐕𝟐 • 𝐕𝟑 • 𝐕𝟓 ⚡
 
 <div align="center" style="max-width:820px; margin:auto; padding:20px; background:#111; border-radius:20px; box-shadow:0 0 15px #0099ff;">
   <h2 style="color:#00c4ff;">📹 𝗦𝗲𝘁𝘂𝗽 𝗧𝘂𝘁𝗼𝗿𝗶𝗮𝗹</h2>
@@ -81,7 +81,7 @@ ______________________________________
 ## 📞 𝐂𝐎𝐍𝐓𝐀𝐂𝐓 𝐌𝐄
 
 ### 🔵 𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊
-<a href="https://facebook.com/61560326905548">
+<a href="https://facebook.com/61590360434650">
 <img src="https://img.shields.io/badge/Facebook-ff0000?style=for-the-badge&logo=facebook&logoColor=white">
 </a>
 
