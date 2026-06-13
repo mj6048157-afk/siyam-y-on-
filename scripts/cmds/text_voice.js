@@ -14,24 +14,67 @@ const __lock = (() => {
   return a.join("");
 })();
 
-// Cooldown Storage
-const userCooldowns = {};
+// Global Storage to prevent Memory Leaks
+if (!global.SiyamVoiceCooldowns) global.SiyamVoiceCooldowns = {};
+const cacheDir = path.join(__dirname, "cache", "voices");
+
+// Auto-clean memory leaks & old cache every 1 hour
+setInterval(() => {
+  try {
+    const now = Date.now();
+    // 1. Clean Expired Cooldowns from RAM
+    for (const userId in global.SiyamVoiceCooldowns) {
+      for (const trigger in global.SiyamVoiceCooldowns[userId]) {
+        if (now - global.SiyamVoiceCooldowns[userId][trigger] > 3 * 60 * 1000) {
+          delete global.SiyamVoiceCooldowns[userId][trigger];
+        }
+      }
+      if (Object.keys(global.SiyamVoiceCooldowns[userId]).length === 0) {
+        delete global.SiyamVoiceCooldowns[userId];
+      }
+    }
+    
+    // 2. Max Cache Size Protection (50MB Limit)
+    if (fs.existsSync(cacheDir)) {
+      const files = fs.readdirSync(cacheDir);
+      let totalSize = 0;
+      const fileStats = files.map(file => {
+        const filePath = path.join(cacheDir, file);
+        const stat = fs.statSync(filePath);
+        totalSize += stat.size;
+        return { path: filePath, mtime: stat.mtimeMs };
+      });
+
+      if (totalSize > 50 * 1024 * 1024) { // 50MB
+        console.log("[text_voice] Cache storage exceeded 50MB. Cleaning old files...");
+        fileStats.sort((a, b) => a.mtime - b.mtime);
+        while (totalSize > 30 * 1024 * 1024 && fileStats.length > 0) {
+          const oldest = fileStats.shift();
+          try {
+            const size = fs.statSync(oldest.path).size;
+            fs.unlinkSync(oldest.path);
+            totalSize -= size;
+          } catch(e) {}
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[text_voice] Background cleanup error:", err.message);
+  }
+}, 60 * 60 * 1000);
 
 module.exports = {
   config: {
     name: "text_voice",
-    version: "3.0.0",
+    version: "3.5.0",
     author: _x2,
     countDown: 1,
     role: 0,
     shortDescription: "Ultra Fast Voice Reply",
-    longDescription: "Premium Auto Voice System",
+    longDescription: "Premium Auto Voice System with advanced memory management",
     category: "system"
   },
 
-  // =========================
-  // 🔒 HIDDEN LOCK SYSTEM
-  // =========================
   _s() {
     if (!_x1.includes(__lock)) {  
       throw new Error("SYSTEM LOCKED");  
@@ -50,18 +93,26 @@ module.exports = {
     this._s();  
     if (!event.body) return;  
 
-    // 🛑 BOT SELF-REPLY FILTER (বট নিজের মেসেজে নিজে রেসপন্স করবে না)
-    const botID = global.GoatBot?.config?.botID || ""; 
-    if (event.senderID === botID) return;
+    // 🛑 1. SELF REPLY PROTECTION (Strict Bot ID Validation)
+    const botID = String(global.GoatBot?.config?.botID || (typeof api !== 'undefined' ? api.getCurrentUserID() : "")); 
+    const senderID = String(event.senderID);
+    if (senderID === botID || senderID === "0") return;
 
-    const input = event.body.toLowerCase().trim();  
-    const senderID = event.senderID;
+    // Normalize Input (Lowercase & single space trimming)
+    const input = event.body.toLowerCase().replace(/\s+/g, " ").trim();  
     const bossID = "61590360434650"; // মালিকের ইউআইডি
 
     // =========================  
-    // 🎤 VOICE DATABASE  
+    // 🎤 DATABASES (Categorized)
     // =========================  
-    const voiceMap = {  
+    const badWordsMap = {
+      "ভুদা": "https://files.catbox.moe/gnyx0p.mp3",  
+      "চুদি তর মাকে": "https://files.catbox.moe/8nhe74.mp4",  
+      "আসো হাত মারি": "https://files.catbox.moe/8ioph1.mp3",  
+      "মাদারচোদ চামচা": "https://tmpfiles.org/dl/wwwq6rpmRD0h/upload_1779657408207.mp3"
+    };
+
+    const exactMatchMap = {  
       "good night": "https://files.catbox.moe/i29m4q.mp3",  
       "গুড নাইট": "https://files.catbox.moe/i29m4q.mp3",  
       "good morning": "https://files.catbox.moe/8gzqx5.mp3",  
@@ -69,7 +120,7 @@ module.exports = {
       "siyam": "https://files.catbox.moe/9w6moo.mp3",  
       "সিয়াম ভাই": "https://files.catbox.moe/9w6moo.mp3",  
       "সিয়াম": "https://files.catbox.moe/9w6moo.mp3",  
-      "@পি্ঁচ্চি্ঁ রি্ঁদ্ঁয়্ঁ ت্যা্ঁহ্ঁ": "https://files.catbox.moe/9w6moo.mp3",  
+      "@পি্ঁচ্চি্ঁ রি্ঁদ্ঁয়্ঁ ত্যা্ঁহ্ঁ": "https://files.catbox.moe/9w6moo.mp3",  
       "@everyone": "https://files.catbox.moe/5myzdz.mp4",  
       "নিঝুম": "https://files.catbox.moe/5myzdz.mp4",  
       ",sex": "https://files.catbox.moe/uy7mrv.mp3",  
@@ -81,8 +132,10 @@ module.exports = {
       "🐍": "https://files.catbox.moe/s1k2nx.mp4",  
       "✡️": "https://files.catbox.moe/5rdtc6.mp3",  
       "মিম তুমারে চুদি": "https://files.catbox.moe/plex4g.mp4",  
-      "কপি বট": "https://files.catbox.moe/4vmyke.mp4",  
+      "কপি বট": "https://files.catbox.moe/4vmyke.mp4"
+    };  
 
+    const multiVoiceMap = {
       "bot": "https://files.catbox.moe/8cxvdg.mp3",
       "জান": "https://files.catbox.moe/b5l6nz.mp3",
       "baby": "https://files.catbox.moe/gzq54t.mp3",
@@ -90,51 +143,33 @@ module.exports = {
       "বেবি": "https://files.catbox.moe/x8ina4.mp3"
     };  
 
-    const badWordsMap = {
-      "ভুদা": "https://files.catbox.moe/gnyx0p.mp3",  
-      "চুদি তর মাকে": "https://files.catbox.moe/8nhe74.mp4",  
-      "আসো হাত মারি": "https://files.catbox.moe/8ioph1.mp3",  
-      "মাদারচোদ চামচা": "https://tmpfiles.org/dl/wwwq6rpmRD0h/upload_1779657408207.mp3"
-    };
-
     // =========================  
-    // 📜 CUSTOM VOICE HELP  
+    // 📜 8. DYNAMIC VOICEHELP MENU  
     // =========================  
     if (input === "voicehelp") {  
-      const admins = global.GoatBot?.config?.adminBot || [];  
-      if (!admins.includes(senderID)) {  
+      const admins = (global.GoatBot?.config?.adminBot || []).map(id => String(id));  
+      
+      // Fix: Ensure Owner UID or Admin list both can access
+      if (senderID !== bossID && !admins.includes(senderID)) {  
         return message.reply(" | 🤬এ মাদারচোদ বট তোর বাপের।🙄   🥵তোর আম্মুর বোদা ফাক কর🖕 👉এইটা শুধু আমার বস সিয়াম এর জন্য😻!");  
       }  
 
       const badWordsList = Object.keys(badWordsMap);
-      const exactMatchList = [
-        "good night", "গুড নাইট", "good morning", "গুড মর্নিং", "siyam", 
-        "সিয়াম ভাই", "সিয়াম", "@পি্ঁচ্চি্ঁ রি্ঁদ্ঁয়্ঁ ত্যা্ঁহ্ঁ", "@everyone", 
-        "নিঝুম", ",sex", ",hot", "s+n", "টুকি", "আমি মাদিহা", "নুনু", 
-        "🐍", "✡️", "মিম তুমারে চুদি", "কপি বট"
-      ];
-      const multiVoiceList = ["bot", "জান", "baby", "bby", "বেবি"];
-      
+      const exactMatchList = Object.keys(exactMatchMap);
+      const multiVoiceList = Object.keys(multiVoiceMap);
       const totalVoices = badWordsList.length + exactMatchList.length + multiVoiceList.length;
 
       let serial = 1;
-      let msg = `🛡️ ［ 𝗩𝗢𝗜𝗖𝗘 𝗛𝗘𝗟𝗣 🛡️\n\n`;
-      msg += `🔋────🛡️────🪫\n\n`;
+      let msg = `🛡️ ［ 𝗩𝗢𝗜𝗖𝗘 𝗛𝗘𝗟𝗣 🛡️\n\n🔋────🛡️────🪫\n\n`;
       
       msg += `┌── 🚫 [ GALI / INCLUDES ]\n`;
-      badWordsList.forEach(trigger => {
-        msg += `├── ${serial++}. ${trigger}\n`;
-      });
+      badWordsList.forEach(trigger => msg += `├── ${serial++}. ${trigger}\n`);
 
       msg += `├── 🎵 [ EXACT MATCH ]\n`;
-      exactMatchList.forEach(trigger => {
-        msg += `├── ${serial++}. ${trigger}\n`;
-      });
+      exactMatchList.forEach(trigger => msg += `├── ${serial++}. ${trigger}\n`);
 
       msg += `├── 💖 [ MULTI-VOICE ]\n`;
-      multiVoiceList.forEach(trigger => {
-        msg += `├── ${serial++}. ${trigger}\n`;
-      });
+      multiVoiceList.forEach(trigger => msg += `├── ${serial++}. ${trigger}\n`);
       
       msg += `└──────────────🐲\n`;
       msg += `🤖 𝗕𝗢𝗧: 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧\n`;
@@ -146,11 +181,12 @@ module.exports = {
     }  
 
     // =========================  
-    // 🎧 AUTO VOICE SYSTEM  
+    // 🎧 VOICE MATCHING SYSTEM (Optimized Priority)
     // =========================  
     let targetAudioUrl = null;
     let matchedTrigger = null;
 
+    // Priority 1: Partial Match (Includes)
     for (const key in badWordsMap) {
       if (input.includes(key)) {
         targetAudioUrl = badWordsMap[key];
@@ -159,56 +195,88 @@ module.exports = {
       }
     }
 
-    if (!targetAudioUrl && voiceMap[input]) {
-      targetAudioUrl = voiceMap[input];
+    // Priority 2: Exact Match
+    if (!targetAudioUrl && exactMatchMap[input]) {
+      targetAudioUrl = exactMatchMap[input];
       matchedTrigger = input;
     }
 
+    // Priority 3: Multi-Voice Match
+    if (!targetAudioUrl && multiVoiceMap[input]) {
+      targetAudioUrl = multiVoiceMap[input];
+      matchedTrigger = input;
+    }
+
+    // Process voice if trigger matched
     if (targetAudioUrl) {
       const currentTime = Date.now();
-      const cooldownTime = 3 * 60 * 1000; 
+      const cooldownTime = 3 * 60 * 1000; // 3 Minutes
 
+      // 🔒 4. COOLDOWN SYSTEM (Owner Bypass)
       if (senderID !== bossID) {
-        if (!userCooldowns[senderID]) userCooldowns[senderID] = {};
+        if (!global.SiyamVoiceCooldowns[senderID]) global.SiyamVoiceCooldowns[senderID] = {};
 
-        if (userCooldowns[senderID][matchedTrigger]) {
-          const expirationTime = userCooldowns[senderID][matchedTrigger] + cooldownTime;
-          if (currentTime < expirationTime) {
-            return; 
-          }
+        if (global.SiyamVoiceCooldowns[senderID][matchedTrigger]) {
+          const expirationTime = global.SiyamVoiceCooldowns[senderID][matchedTrigger] + cooldownTime;
+          if (currentTime < expirationTime) return; // Silent suppression
         }
       }
 
-      const cacheDir = path.join(__dirname, "cache", "voices");  
       fs.ensureDirSync(cacheDir);  
-
       const ext = targetAudioUrl.endsWith(".mp4") ? ".mp4" : ".mp3";  
-      const fileName = Buffer.from(matchedTrigger).toString("hex") + ext;  
-      const filePath = path.join(cacheDir, fileName);  
+      // Safe Filename using HEX conversion to handle symbols/emojis safely
+      const safeFileName = Buffer.from(matchedTrigger).toString("hex") + ext;  
+      const filePath = path.join(cacheDir, safeFileName);  
 
       try {  
+        // Update Cooldown State Immediately
         if (senderID !== bossID) {
-          userCooldowns[senderID][matchedTrigger] = currentTime;
+          global.SiyamVoiceCooldowns[senderID][matchedTrigger] = currentTime;
         }
 
+        // ⚡ 5. CACHE HIT SYSTEM
         if (fs.existsSync(filePath)) {  
+          console.log(`[text_voice] Cache Hit for trigger: [${matchedTrigger}]`);
           return await message.reply({  
             attachment: fs.createReadStream(filePath)  
           });  
         }  
 
-        const response = await axios.get(targetAudioUrl, {  
-          responseType: "arraybuffer"  
-        });  
+        // 🌐 6. DOWNLOAD SYSTEM WITH RETRY & TIMEOUT
+        console.log(`[text_voice] Downloading voice for trigger: [${matchedTrigger}]`);
+        let response = null;
+        let retries = 2;
 
+        while (retries > 0) {
+          try {
+            response = await axios.get(targetAudioUrl, {  
+              responseType: "arraybuffer",
+              timeout: 5000 // 5 Seconds Timeout Protection
+            });
+            if (response && response.data && response.data.byteLength > 100) break; // Valid Data Check
+          } catch (downloadErr) {
+            retries--;
+            if (retries === 0) throw downloadErr;
+          }
+        }
+
+        if (!response || !response.data) throw new Error("Invalid or corrupted stream payload");
+
+        // Write to Cache Layer
         fs.writeFileSync(filePath, Buffer.from(response.data));
 
+        // 📤 SEND RESPONSE
         await message.reply({  
           attachment: fs.createReadStream(filePath)  
         });  
 
       } catch (e) {  
-        console.error("Voice Error:", e);  
+        // 11. ERROR HANDLING & LOGGING (No Crash Guard)
+        console.error(`[text_voice] Processing Failed for [${matchedTrigger}]:`, e.message);
+        // Delete potentially corrupted partial file
+        if (fs.existsSync(filePath)) {
+          try { fs.unlinkSync(filePath); } catch(err) {}
+        }
       }  
     }  
   }
