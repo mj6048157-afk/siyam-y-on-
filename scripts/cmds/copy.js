@@ -1,17 +1,17 @@
-if (!global.siyamCopyCooldown) {
-    global.siyamCopyCooldown = {};
+if (!global.siyamTextCooldown) {
+    global.siyamTextCooldown = {};
 }
 
 module.exports = {
     config: {
         name: "copy",
-        version: "6.0.0",
+        version: "7.0.0",
         author: "SIYAM HASAN",
         role: 0,
         countDown: 5,
         category: "UTILITY",
-        shortDescription: "Multiplies text or emojis safely up to 10000",
-        longDescription: "৩ মিনিটের ইউজার কুলডাউনসহ ১০,০০০ বার পর্যন্ত কপি করার সাধারণ সিস্টেম।",
+        shortDescription: "Multiplies text safely with smart per-text cooldown",
+        longDescription: "এডমিনের জন্য আনলিমিটেড এবং সাধারণ ইউজারের জন্য একই টেক্সটে ৩ মিনিটের কুলডাউন সিস্টেম।",
         guide: "copy [text/emoji] [count]\nExample: copy 🔪 5000"
     },
 
@@ -20,7 +20,7 @@ module.exports = {
 
         try {
             if (args.length < 2) {
-                return api.sendMessage("⚠️ ব্যবহার বিধি: copy [টেক্সট/ইমোজি] [সংখ্যা]\nউদাহরণ: copy 🔪 2000", threadID, messageID);
+                return api.sendMessage("⚠️ copy [টেক্সট/ইমোজি] [সংখ্যা]\nউদাহরণ: copy আমার বস সিয়াম 100", threadID, messageID);
             }
 
             const countStr = args[args.length - 1];
@@ -31,17 +31,7 @@ module.exports = {
             }
 
             if (count > 10000) {
-                return api.sendMessage("⚠️ সেফটি সিস্টেম অ্যালার্ট: বটের সুরক্ষার জন্য একসাথে সর্বোচ্চ ১০,০০০ বার কপি করা যাবে।", threadID, messageID);
-            }
-
-            // ৩ মিনিটের ব্যক্তিগত কুলডাউন চেক
-            const currentTime = Date.now();
-            const cooldownTime = 3 * 60 * 1000; 
-
-            if (global.siyamCopyCooldown[senderID] && (currentTime - global.siyamCopyCooldown[senderID] < cooldownTime)) {
-                const remainingTime = Math.ceil((cooldownTime - (currentTime - global.siyamCopyCooldown[senderID])) / 1000);
-                console.log(`[COOLDOWN] Copy command ignored for ${senderID}. ${remainingTime}s remaining.`);
-                return; 
+                return api.sendMessage("⚠️ গরিবের দল😖 একসাথে সর্বোচ্চ ১০,০০০ বার কপি করা যাবে।", threadID, messageID);
             }
 
             args.pop();
@@ -51,8 +41,26 @@ module.exports = {
                 return api.sendMessage("❌ দয়া করে কপি করার জন্য কোনো টেক্সট বা ইমোজি দিন।", threadID, messageID);
             }
 
-            // কুলডাউন একটিভ করা
-            global.siyamCopyCooldown[senderID] = currentTime;
+            // বটের এডমিন লিস্ট চেক করা (GoatBot বা সাধারণ ফ্রেমওয়ার্ক অনুযায়ী)
+            const botAdmins = global.GoatBot?.config?.adminBot || global.config?.ADMINBOT || [];
+            const isBotAdmin = botAdmins.includes(senderID);
+
+            // যদি এডমিন না হয়, তবে টেক্সট-ভিত্তিক স্মার্ট কুলডাউন চেক হবে
+            if (!isBotAdmin) {
+                const currentTime = Date.now();
+                const cooldownTime = 3 * 60 * 1000; // ৩ মিনিট
+                
+                // ইউজারের আইডি এবং ওই নির্দিষ্ট টেক্সটের জন্য ইউনিক কি (Key) তৈরি করা
+                const cooldownKey = `${senderID}_${Buffer.from(targetText).toString("hex").slice(0, 30)}`;
+
+                if (global.siyamTextCooldown[cooldownKey] && (currentTime - global.siyamTextCooldown[cooldownKey] < cooldownTime)) {
+                    const remainingTime = Math.ceil((cooldownTime - (currentTime - global.siyamTextCooldown[cooldownKey])) / 1000);
+                    return api.sendMessage(` 🚫 𝗗𝘂𝗽𝗹𝗶𝗰𝗮𝘁𝗲 𝗠𝗲𝘀𝘀𝗮𝗴𝗲 ⏳ 𝗧𝗿𝘆 𝗔𝗴𝗮𝗶𝗻 𝗜𝗻 ${remainingTime} 💎 Try Another Text)`, threadID, messageID);
+                }
+
+                // এই নির্দিষ্ট টেক্সটটির জন্য টাইমস্ট্যাম্প সেট করা
+                global.siyamTextCooldown[cooldownKey] = currentTime;
+            }
 
             // টেক্সট রিপিট তৈরি করা
             let repeatedResult = Array(count).fill(targetText).join(" ");
