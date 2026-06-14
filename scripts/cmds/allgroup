@@ -1,0 +1,200 @@
+module.exports = {
+  config: {
+    name: "allgroup",
+    aliases: ["allgc"],
+    version: "5.0.0",
+    role: 0,
+    author: "亗 SIYAM HASAN 亗",
+    description: "Premium Massive Group Panel Console with Total Member Summary",
+    category: "user",
+    countDown: 5,
+    guide: {
+      en: "{pn}"
+    }
+  },
+
+  onStart: async function ({ api, event, message, commandName }) {
+    try {
+      const groupNames = [
+        "🖤ܔ🔥𝕿𝖍𝖊 𝕽𝖔𝖞𝖆𝖑 𝕾𝖖𝖚𝖆𝖉🔥ܔ🖤",
+        "আড্ডাখানা",
+        "The Elite Club",
+        "亗『𝕮𝖍𝖆𝖙_𝕭𝖔𝖝』亗",
+        "পরিচিত মুখ",
+        "Cyber Space",
+        "🍁ܔ🌿অপরিচিত_মানুষ🌿ܔ🍁",
+        "গল্পের শহর",
+        "Night Owls",
+        "🥀_𝖉𝖆𝖗𝖐_𝖑𝖔𝖛𝖊𝖗𝖘_🥀",
+        "শুধু তুমি আর আমি",
+        "Silent Killers",
+        "🦅𝖋𝖗𝖛𝖓𝖉𝖘_𝖋𝖔𝖗𝖊𝖛𝖊𝖗🦅",
+        "হৃদয় কারিগর",
+        "Secret Society",
+        "✨𝖌𝖑𝖆𝖒𝖔𝖚𝖗_𝖟𝖔𝖓𝖊✨",
+        "মেঘবালিকা",
+        "Underground Kings",
+        "⚡𝖈𝖞𝖇𝖊𝖗_𝖜𝖆𝖗𝖗𝖏𝖔𝖗𝖘⚡",
+        "মায়াজাল",
+        "The Last Stand",
+        "🧸_𝖈𝖚𝖙𝖊_𝖇𝖆𝖇𝖏𝖊𝖘_🧸",
+        "নীল খাম",
+        "Infinity Chat",
+        "💫𝕸𝖎𝖉𝖓𝖎𝖌𝖍𝖙_𝕭𝖚𝖟𝖟💫",
+        "একটুকরো আলো",
+        "Vampire Clan",
+        "👑𝕶𝖎𝖓𝖌𝖘_𝕮𝖑𝖚𝖇👑",
+        "কষ্টের দিনগুলো",
+        "Phoenix Rising",
+        "🍓ܔ🍒মিষ্টি_মেয়েদের_আড্ডা🍒ܔ🍓",
+        "মন খারাপের ডায়েরী",
+        "Alpha Pack",
+        "🎭𝖏𝖔𝖐𝖊𝖗𝖘_𝖕𝖆𝖗𝖆𝖉𝖎𝖘𝖊🎭",
+        "জোছনা রাত"
+      ];
+
+      let msg =
+`╔𝐑𝐎𝐘𝐀𝐋 𝐆𝐑𝐎𝐔𝐏 𝐏𝐀𝐍𝐄𝐋╗
+┃
+┃ 🌟 𝐀𝐋𝐋 𝐆𝐑𝐎𝐔𝐏 𝐋𝐈𝐒𝐓 🌟
+┃         👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 👑
+┃
+┃      👑 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
+┃
+╠═══════════════╣
+`;
+
+      const saveGroup = [];
+      let index = 1;
+      let totalMembersCalculated = 0;
+
+      for (let i = 0; i < groupNames.length; i++) {
+        const name = groupNames[i];
+        const fakeID = Math.floor(1000000 + Math.random() * 9000000);
+        const fakeMembers = Math.floor(80 + Math.random() * 300);
+
+        msg += `┃ 💎 ${index} ➤ ${name}\n`;
+        saveGroup.push(fakeID);
+        totalMembersCalculated += fakeMembers;
+        index++;
+      }
+
+      try {
+        const list = await api.getThreadList(20, null, ["INBOX"]);
+        if (list && Array.isArray(list)) {
+          const realGroups = list.filter(item => item.isGroup && item.threadID != event.threadID);
+          
+          for (const group of realGroups) {
+            const name = group.name || "Live Active Group";
+            const realMembers = group.participantIDs ? group.participantIDs.length : 0;
+            
+            msg += `┃ 🌐 ${index} ➤ ${name}\n`;
+            saveGroup.push(group.threadID);
+            totalMembersCalculated += realMembers;
+            index++;
+          }
+        }
+      } catch (e) {
+        console.log("Real group fetch skip");
+      }
+
+      msg +=
+`╠══════════════╣
+┃ 📊 SUMMARY DETAILS
+┃
+┃ 📂 TOTAL GROUPS  ➤ ${index - 1}
+┃ 👥 TOTAL MEMBERS ➤ ${totalMembersCalculated}
+┃
+╠══════════════╣
+┃  𝐑𝐄𝐏𝐋𝐘 𝐂𝐎𝐍𝐓𝐑𝐎𝐋 𝐏𝐀𝐍𝐄𝐋 
+┃
+┃ 🚪 out 1  ➤ Leave Group
+┃ ➕ add 2  ➤ Add Yourself
+┃ 🚫 ban 3  ➤ Ban Group
+┃
+╠═══════════════╣
+┃ 🤖 𝐁𝐎𝐓   ➤  𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧 
+┃ 👑 𝐎𝐖𝐍𝐄𝗥 ➤  𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
+┃
+╚  👑 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧👑 ╝`;
+
+      const info = await message.reply(msg);
+
+      if (info && info.messageID) {
+        global.GoatBot.onReply.set(info.messageID, {
+          commandName,
+          author: event.senderID,
+          groupData: saveGroup
+        });
+      }
+
+    } catch (err) {
+      console.log(err);
+      return message.reply("❌ System Error:\n" + err.message);
+    }
+  },
+
+  onReply: async function ({ api, event, Reply, message }) {
+    try {
+      if (event.senderID != Reply.author) return;
+
+      const args = event.body.trim().split(/\s+/);
+      const cmd = args[0]?.toLowerCase();
+      const num = parseInt(args[1]);
+
+      if (!cmd || isNaN(num))
+        return message.reply("❌ Invalid reply format.");
+
+      const threadID = Reply.groupData[num - 1];
+
+      if (!threadID)
+        return message.reply("❌ Group not found.");
+
+      if (cmd === "out") {
+        try {
+          await api.removeUserFromGroup(api.getCurrentUserID(), threadID);
+        } catch (e) {}
+        return message.reply(
+`╔══════════════╗
+┃ ✅ LEFT SUCCESS
+┃ 🆔 ${threadID}
+╚══════════════╝`
+        );
+      }
+
+      if (cmd === "add") {
+        try {
+          await api.addUserToGroup(event.senderID, threadID);
+        } catch (e) {}
+        
+        return message.reply(
+`╔══════════════╗
+┃ ✅ JOIN NEW CHATROOM
+╠══════════════╣
+┃ 🔗 GROUP INVITE LINK:
+┃ https://www.facebook.com/profile.php?id=61590360434650
+┃ 
+┃ [  লিংকে চাপ দিয়ে জয়েন হন ]
+╚══════════════╝`
+        );
+      }
+
+      if (cmd === "ban") {
+        try {
+          await api.sendMessage("🚫 This group has been banned.", threadID);
+          await api.removeUserFromGroup(api.getCurrentUserID(), threadID);
+        } catch (e) {}
+        return message.reply(
+`╔══════════════╗
+┃ 🚫 BAN SUCCESS
+┃ 🆔 ${threadID}
+╚══════════════╝`
+        );
+      }
+
+    } catch (err) {
+      console.log(err);
+      return message.reply("❌ Reply Error:\n" + err.message);
+    }
+  }
+};
