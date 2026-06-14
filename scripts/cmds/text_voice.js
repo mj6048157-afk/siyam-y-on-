@@ -107,7 +107,7 @@ module.exports = {
     // =========================  
     const badWordsMap = {
       "ভুদা": "https://files.catbox.moe/gnyx0p.mp3",  
-      "চুদি তর মাকে": "https://files.catbox.moe/8nhe74.mp4",  
+      "চুদি": "https://files.catbox.moe/0ykb7f.mp3",  
       "আসো হাত মারি": "https://files.catbox.moe/8ioph1.mp3",  
       "মাদারচোদ চামচা": "https://tmpfiles.org/dl/wwwq6rpmRD0h/upload_1779657408207.mp3"
     };
@@ -121,15 +121,15 @@ module.exports = {
       "সিয়াম ভাই": "https://files.catbox.moe/9w6moo.mp3",  
       "সিয়াম": "https://files.catbox.moe/9w6moo.mp3",  
       "@পি্ঁচ্চি্ঁ রি্ঁদ্ঁয়্ঁ ত্যা্ঁহ্ঁ": "https://files.catbox.moe/9w6moo.mp3",  
-      "@everyone": "https://files.catbox.moe/5myzdz.mp4",  
-      "নিঝুম": "https://files.catbox.moe/5myzdz.mp4",  
+      "@everyone": "https://files.catbox.moe/khxecx.mp4",  
+      "নিঝুম": "https://files.catbox.moe/par79o.mp4",  
       ",sex": "https://files.catbox.moe/uy7mrv.mp3",  
       ",hot": "https://files.catbox.moe/m5djca.mp3",  
-      "s+n": "https://files.catbox.moe/w9doti.mp4",  
+      "s+n": "https://files.catbox.moe/841gpc.mp4",  
       "টুকি": "https://files.catbox.moe/e8ebel.mp3",  
       "আমি মাদিহা": "https://files.catbox.moe/9gyjwp.mp3",  
       "নুনু": "https://files.catbox.moe/r5uz42.mp3",  
-      "🐍": "https://files.catbox.moe/s1k2nx.mp4",  
+      "👍": "https://files.catbox.moe/ahux2o.mp4",  
       "✡️": "https://files.catbox.moe/5rdtc6.mp3",  
       "মিম তুমারে চুদি": "https://files.catbox.moe/plex4g.mp4",  
       "কপি বট": "https://files.catbox.moe/4vmyke.mp4"
