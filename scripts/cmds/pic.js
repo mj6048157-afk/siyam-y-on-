@@ -2,42 +2,35 @@ const fs = require("fs-extra");
 const axios = require("axios");
 const path = require("path");
 
-// গ্লোবাল মেমোরি ট্র্যাকার (যাতে সিরিয়াল বজায় থাকে এবং শেষ হলে ১ম থেকে শুরু হয়)
 if (!global.__PicCommandIndex) global.__PicCommandIndex = 0;
 
 module.exports = {
   config: {
     name: "pic",
-    aliases: ["পিক দে", "পিআইসি দে", "পিপি", "পিপি দে", "প্রোফাইল পিক", "প্রোফাইল পিক দে"],
-    version: "7.0.0",
+    aliases: ["পিক", "পিকদে", "পিআইসিদে", "পিপি", "পিপিদে", "প্রোফাইলপিক", "প্রোফাইলপিকদে"],
+    version: "9.0.0",
     author: "SIYAM HASAN",
-    countDown: 3,
+    countDown: 2,
     role: 0,
-    shortDescription: "Sends 85 premium unique sad images in a perfect loop.",
-    longDescription: "Sequential image delivery engine with dynamic memory cleanup and custom-crafted emotional captions.",
-    category: "media"
+    shortDescription: "Sends unique sad images in a strict loop using prefix.",
+    longDescription: "Strict prefix execution engine with precise stream management, loading screen, and auto loop.",
+    category: "media",
+    usePrefix: true, // 🔒 এখানে true করে দেওয়া হয়েছে, তাই প্রিফিক্স (/, !) ছাড়া কাজ করবে না
+    guide: {
+      en: "{p}{pn} অথবা প্রিফিক্স সহ নির্দিষ্ট অ্যালাইয়াস ব্যবহার করুন।"
+    }
   },
 
+  // 🚀 অনলি অনস্টার্টে রান হবে এবং প্রিফিক্স হ্যান্ডেল করবে, ডাবল মেসেজের কোনো সুযোগ নেই
   onStart: async function ({ api, event, message }) {
-    return this.onChat({ api, event, message });
-  },
-
-  onChat: async function ({ api, event, message }) {
-    if (!event.body || typeof event.body !== "string") return;
-
-    const input = event.body.trim().toLowerCase();
-    const triggers = ["pic", "পিক দে", "পিআইসি দে", "পিপি", "পিপি দে", "প্রোফাইল পিক", "প্রোফাইল পিক দে"];
-
-    if (!triggers.includes(input)) return;
-
     let loadingMsg;
     try {
-      loadingMsg = await api.sendMessage("⏳ সিয়াম বসের ক্লাউড সার্ভার থেকে সিকোয়েন্সিয়াল ফটো ও ক্যাপশন লোড হচ্ছে...", event.threadID);
+      loadingMsg = await api.sendMessage("⏳ সিয়াম বসের ক্লাউড সার্ভার থেকে ফটো ও ক্যাপশন লোড হচ্ছে...", event.threadID);
     } catch (e) {
       console.error("Loading message failed", e);
     }
 
-    // 🖼️ ডাটাবেজে থাকা সম্পূর্ণ ৮৫টি ইউনিক ইমেজ লিংক
+    // 🖼️ আপনার দেওয়া সম্পূর্ণ ৮৫টি ফ্রেশ ইমেজ লিংক
     const images = [
       "https://i.imgur.com/yMHlG2M.jpeg", "https://i.imgur.com/IsdReUg.jpeg", "https://i.imgur.com/tvQTeBg.jpeg",
       "https://i.imgur.com/6ReF5in.jpeg", "https://i.imgur.com/ULizhYu.jpeg", "https://i.imgur.com/TVUrWN4.jpeg",
@@ -72,7 +65,7 @@ module.exports = {
       "https://i.imgur.com/TYcGGR0.jpeg", "https://i.imgur.com/k57VlEZ.jpeg", "https://i.imgur.com/htKsgTQ.jpeg"
     ];
 
-    // 📝 প্রতিটি পিকের জন্য আলাদা ৮৫টি ডিপ ইমোশনাল ও নামহীন ক্যাপশন ব্যাংক
+    // 📝 ৮৫টি আলাদা আলাদা প্রিমিয়াম ইমোশনাল ক্যাপশন ব্যাংক
     const captions = [
       "এক সময় ইনতিয়া আমার সবচেয়ে ভালো বেস্ট ফ্রেন্ড ছিল, অথচ আজ সে অচেনা কোনো মানুষের ভিড়ে হারিয়ে গেছে। 💔",
       "সিয়াম হয়তো সবার সামনে হাসে, কিন্তু বেস্ট ফ্রেন্ড ইনতিয়ার দেওয়া অবহেলাটা আজও তাকে ভেতরে ভেতরে কুঁড়ে খায়। 🥀",
@@ -87,7 +80,6 @@ module.exports = {
       "সবচেয়ে কাছের বেস্ট ফ্রেন্ড যখন বেইমানি করে চলে যায়, তখন নতুন করে কাউকে বিশ্বাস করার ক্ষমতা হারিয়ে যায়। 🖤",
       "ভালো থাকার অভিনয় করতে করতে আজ সিয়াম ক্লান্ত, কেউ বুঝল না অন্তরালের এই ভাঙা মনটা। 💔",
       "যার চলে যাওয়ার সে তো চলেই যায়, মাঝখান থেকে ফেলে যাওয়া স্মৃতিগুলো কাল হয়ে দাঁড়ায়। 🥀",
-      // --- এইখান থেকে নাম ছাড়া পিউর ডিপ স্যাড ক্যাপশন শুরু (বাকি সব ইমেজের জন্য) ---
       "কিছু শূন্যতা কখনো পূরণ হয় না, কিছু স্মৃতি সারাজীবন কাঁদিয়ে যায়। 🖤",
       "আজকাল নিস্তব্ধ রাতগুলো বড্ড ভারী মনে হয়, যেন চারপাশটা কষ্টের চাদরে ঢাকা। 🌌",
       "ভালো রাখতে না পারো, অন্তত অবহেলার তীব্র বিষাক্ত তীরে কাউকে ক্ষতবিক্ষত করো না। 🏹",
@@ -97,13 +89,13 @@ module.exports = {
       "নদীর ওপার ভাঙলে যেমন একুল গড়ে, মনের ওপার ভাঙলে শুধু দীর্ঘশ্বাসই পড়ে। 🌊",
       "চিৎকার করে কাঁদার চেয়ে, নীরবে এক ফোঁটা চোখের জল ফেলা অনেক বেশি কষ্টের। 💧",
       "ক্লান্ত আমি এই অভিনয়ের দুনিয়ায়, যেখানে প্রতিটা মানুষ মুখোশধারী। 🎭",
-      "অপেক্ষাটা তার জন্য করা যায়, যে অন্তত ফেরার তাগিদ অনুভব করে। ⏳",
+      "অपेक्षाটা তার জন্য করা যায়, যে অন্তত ফেরার তাগিদ অনুভব করে। ⏳",
       "পাবো না জেনেও কাউকে পাগলের মতো ভালোবেসে যাওয়াটাও এক অদ্ভুত নেশা। 🍂",
       "কিছু গল্প অসমাপ্ত থাকাই ভালো, সমাপ্তিটা বড্ড বেশি করুণ হয়। 📜",
       "যে হাতটা কখনো ছাড়বো না বলেছিল, আজ সে অন্য হাত ধরে দিব্যি সুখে আছে। 🤝",
       "অনুভূতিরা যখন মূল্যহীন হয়ে পড়ে, নীরবতাই তখন একমাত্র আশ্রয় হয়। 🤐",
       "কষ্টগুলো বুকের বাম পাশে চেপে রেখে হাসিমুখে বেঁচে থাকাটাই এক যুদ্ধ। 🛡️",
-      "আজ ডায়েরির প্রতিটা ছেঁড়া পাতায় লুকিয়ে আছে কোনো এক অপ্রকাশিত কান্না। 📖",
+      "আজ ডায়েরির প্রতিটা ছেঁড়া পাতায় লুকিয়ে আছে কোনো এক অপ্রকাশিত কান্না। 📖",
       "মানুষ কখনো মরে না, মরে যায় তার ভেতরে থাকা নিষ্পাপ অনুভূতিগুলো। 🥀",
       "যদি জানতে তোমাকে কতটা চেয়েছিলাম, তবে এভাবে মাঝপথে ফেলে যেতে পারতে না। 👣",
       "হারিয়ে ফেলার ভয় যাকে পেতাম, আজ তাকে হারানোর পর আর কোনো ভয় অবশিষ্ট নেই। 🌪️",
@@ -122,14 +114,6 @@ module.exports = {
       "ক্ষমা তো বারবার করা যায়, কিন্তু ভেঙে যাওয়া বিশ্বাস আর কখনো জোড়া লাগে না। 🛠️",
       "আজ আমি নিজের কাছেই নিজে অচেনা, কার জন্য নিজেকে এতটা শেষ করলাম? 🔎",
       "ভালোবাসার শেষ পরিণতি যদি শুধুই চোখের জল হয়, তবে কেন মানুষ ভালোবাসে? 🌧️",
-      "যে চলে গেছে তাকে যেতে দাও, জোর করে ধরে রাখা যায় কিন্তু ভালোবাসা পাওয়া যায় না। 🕊️",
-      "তুমি ভালো থেকো তোমার নতুন শহরে, আমি নাহয় হারিয়ে যাবো আমার পুরনো অন্ধকারে। 🌃",
-      "কষ্টের কোনো ভাষা হয় না, এটা শুধু নীরবে চোখ দিয়ে ঝরে পড়ে। 👁️",
-      "আজকাল নিজেকে বড্ড একা মনে হয়, যেন এই বিশাল পৃথিবীতে আমার কেউ নেই। 🌍",
-      "স্মৃতির পাতাগুলো ওল্টাতে গিয়ে বড্ড বেশি হোঁচট খেলাম আজ। 🍂",
-      "কিছু মানুষের চলে যাওয়াটা জীবনের সব আলো এক নিমেষে নিভিয়ে দেয়। 🕯️",
-      "মন দিতে গিয়ে আজ আমি নিঃস্ব, বিনিময়ে পেয়েছি এক বুক একাকীত্ব। 💔",
-      "ভালোবাসাটা যদি সত্যি হতো, তবে আজ মাঝরাতে আমাকে এভাবে কাঁদতে হতো না। 🌙",
       "যে হারিয়ে যায় সে ফিরে আসে, কিন্তু যে বদলে যায় সে আর কখনো আগের মতো হয় না। ⏳",
       "কিছু রাত কাটে ঘুমের ঘোরে, আর কিছু রাত কাটে পুরনো মেসেজ পড়ে। 📱",
       "আঘাতটা যখন খুব কাছের মানুষ দেয়, তখন তীব্র চিৎকারও গলার কাছে আটকে যায়। 🤐",
@@ -140,7 +124,7 @@ module.exports = {
       "অবহেলার চেয়ে বড় কোনো আঘাত নেই, এটা জীবন্ত মানুষকে ভেতর থেকে মেরে ফেলে। 🔥",
       "যে পাখি খাঁচা ভেঙে উড়ে যায়, তাকে আকাশ দিলেও সে আর কখনো ফিরে আসে না। 🦅",
       "আজ শূন্য পকেটের চেয়েও বেশি শূন্য লাগে আমার এই ভাঙা বুকটা। 🕳️",
-      "সবাই বলে সময় সব ক্ষত সারিয়ে দেয়, কিন্তু সত্যি বলতে সময় শুধু সহ্য করা শিখিয়ে দেয়। ⏳",
+      "সবাই বলে সময় সব ক্ষত সারিয়ে দেয়, কিন্তু সত্যি বলতে সময় শুধু সহ্য করা শিখিয়ে দেয়। ⏳",
       "কিছু কথা না বলাই থেকে যাক, সব কথা প্রকাশ পেলে গল্পের সৌন্দর্য নষ্ট হয়ে যায়। 🤫",
       "আজ আমার নীরবতাই আমার প্রতিবাদের ভাষা, কারণ কথা বলার যোগ্যতা হারিয়েছি। 🗣️",
       "ভুল মানুষের পেছনে সময় নষ্ট করার চেয়ে, একাকীত্ব নিয়ে বেঁচে থাকা অনেক ভালো। 🚶",
@@ -159,59 +143,56 @@ module.exports = {
       "ভালো থেকো প্রিয়, তোমার দেওয়া প্রতিটা আঘাত বুকে নিয়ে আমি নাহয় একাই চলবো। 🖤"
     ];
 
-    // 🔄 লুপ মেকানিজম এনশিওর করা
+    // 🔄 লুপ ট্র্যাকার হ্যান্ডেলিং
     let currentIndex = global.__PicCommandIndex;
-    
-    // সেফটি চেক: ইনডেক্স যদি কোনো কারণে অ্যারের সাইজ ছাড়িয়ে যায়
-    if (currentIndex >= images.length) {
+    if (currentIndex >= images.length || currentIndex < 0) {
       currentIndex = 0;
     }
 
     const currentImage = images[currentIndex];
     const currentCaption = captions[currentIndex];
 
-    // পরবর্তী এক্সিকিউশনের জন্য ইনডেক্স ১ বাড়ানো
-    global.__PicCommandIndex = currentIndex + 1;
-    if (global.__PicCommandIndex >= images.length) {
-      global.__PicCommandIndex = 0; // সব পাঠানো শেষ হলে আবার ১ম থেকে শুরু হবে
-    }
+    // পরবর্তী এক্সিকিউশনের জন্য ইনডেক্স সেট করা (শেষ হলে আবার ০ হবে)
+    global.__PicCommandIndex = (currentIndex + 1) % images.length;
 
     const cacheDir = path.join(__dirname, "cache");
-    const uniqueFileName = `pic_loop_${Date.now()}_${Math.floor(Math.random() * 1000)}.jpg`;
+    const uniqueFileName = `pic_prefix_${Date.now()}.jpg`;
     const filePath = path.join(cacheDir, uniqueFileName);
 
     try {
       await fs.ensureDir(cacheDir);
 
-      const response = await axios.get(currentImage, { responseType: "arraybuffer" });
+      // 📥 ডাটা স্ট্রিমিং ও বাফার রাইটিং
+      const response = await axios.get(currentImage, { responseType: "arraybuffer", timeout: 15000 });
       await fs.writeFile(filePath, Buffer.from(response.data, "utf-8"));
 
+      // আগের লোডিং টেক্সট সফলভাবে রিমুভ করা
       if (loadingMsg && loadingMsg.messageID) {
         try { await api.unsendMessage(loadingMsg.messageID); } catch (e) {}
       }
 
-      // ফাইনাল মেসেজ ডেলিভারি (ক্যাপশনে সিরিয়াল নাম্বার সহ যাতে ট্র্যাক করা যায়)
+      // মূল রেসপন্স ডেলিভারি করা
       await message.reply({
         body: `[সাফল্য নং: ${currentIndex + 1}/৮৫]\n\n${currentCaption}`,
         attachment: fs.createReadStream(filePath)
       });
 
-      if (await fs.pathExists(filePath)) {
-        await fs.unlink(filePath);
-      }
+      // 🧹 মেমোরি ক্যাশ ক্লিনআপ (১ সেকেন্ড ডিলে সেফটিসহ)
+      setTimeout(async () => {
+        if (await fs.pathExists(filePath)) await fs.unlink(filePath);
+      }, 1000);
 
     } catch (err) {
-      console.error("Pic Loop Command Error:", err);
+      console.error("Prefix Pic Engine Error:", err);
       
       if (loadingMsg && loadingMsg.messageID) {
         try { await api.unsendMessage(loadingMsg.messageID); } catch (e) {}
       }
 
-      if (await fs.pathExists(filePath)) {
-        await fs.unlink(filePath);
-      }
+      if (await fs.pathExists(filePath)) await fs.unlink(filePath);
 
-      return message.reply(`❌ সিয়াম ভাই, ${currentIndex + 1} নম্বর ইমেজ লিংকটি লোড করতে সার্ভার ব্যর্থ হয়েছে। পরবর্তী ফাইলটি চেষ্টা করতে আবার ট্রিগার করুন!`);
+      // নেটওয়ার্ক ফেইল হলে যাতে সিয়াম ভাই লুপে আটকে না থাকে, পরের ট্রিগারে পরের ফাইল লোড হবে
+      return message.reply(`❌ ফেসবুক বা বাফারিং সমস্যার কারণে ${currentIndex + 1} নম্বর ইমেজটি স্কিপ হয়েছে। সিয়াম ভাই, দয়া করে আবার ট্রাই করুন!`);
     }
   }
 };
