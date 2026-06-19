@@ -5,28 +5,30 @@ const mongoose = require('mongoose');
 
 module.exports = {
   config: {
-    name: "up2",
-    version: "8.0.0",
+    name: "uptime2",
+    aliases: ["up2", "upt2"],
+    version: "8.1.0",
     role: 0,
     author: "xalman",
-    description: "Premium Uptime for Goat Bot V2",
+    description: "Premium Uptime for Goat Bot V2 with Sequential Video",
     category: "system",
     guide: "{pn}",
     countDown: 5
   },
 
   onStart: async function ({ api, event }) {
-    const { threadID, messageID, timestamp } = event;
+    const { threadID, messageID } = event;
 
+    // ১% থেকে ১০০% লোডিং অ্যানিমেশন
     const sendLoading = await api.sendMessage("⏳ 𝗟𝗼𝗮𝗱𝗶𝗻𝗴 𝗦𝘆𝘀𝘁𝗲𝗺: 𝟬%", threadID);
 
     const loadingSteps = ["𝟮𝟬%", "𝟰𝟬%", "𝟲𝟬%", "𝟴𝟬%", "𝟭𝟬𝟬%"];
-    
     for (const step of loadingSteps) {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Half second delay per step
-      await api.editMessage(`⏳ 𝗟𝗼𝗮𝗱𝗶𝗻𝗴 𝗦𝘆𝘀𝘁𝗲𝗺: ${step}`, sendLoading.messageID);
+      await new Promise(resolve => setTimeout(resolve, 400)); // ৪00 মিলিসেকেন্ড ডিলে
+      await api.editMessage(`⏳ 𝗟𝗼𝗮𝗱𝗶𝗻𝗴 𝗦𝘆𝘀𝘁𝗲𝗺: ${step}`, sendLoading.messageID).catch(() => {});
     }
 
+    // আপটাইম এবং রিসোর্স ক্যালকুলেশন
     const uptime = process.uptime();
     const days = Math.floor(uptime / (3600 * 24));
     const hours = Math.floor((uptime % (3600 * 24)) / 3600);
@@ -40,19 +42,26 @@ module.exports = {
     const timeNow = moment.tz("Asia/Dhaka").format("hh:mm:ss A");
     const dateNow = moment.tz("Asia/Dhaka").format("DD/MM/YYYY");
 
+    // ক্রমানুসারে ভিডিও আসার লজিক
     const gifLinks = [
-      "https://files.catbox.moe/22enjn.mp4",
-      "https://files.catbox.moe/22enjn.mp4"
+      "https://files.catbox.moe/9xm905.mp4", // ১ম ভিডিও লিংক
+      "https://files.catbox.moe/tl221f.mp4"  // ২য় ভিডিও লিংক (টেস্ট করার জন্য এখানে ২য় লিংকটি পরিবর্তন করে নিতে পারেন)
     ];
-    const randomGif = gifLinks[Math.floor(Math.random() * gifLinks.length)];
+
+    if (global.uptimeVideoIndex === undefined) {
+      global.uptimeVideoIndex = 0;
+    }
+    const currentVideo = gifLinks[global.uptimeVideoIndex];
+    
+    // পরবর্তী কম্যান্ডের জন্য ইনডেক্স পরিবর্তন (+১)
+    global.uptimeVideoIndex = (global.uptimeVideoIndex + 1) % gifLinks.length;
 
     const msg = `
-◢◤━━━━━━━━━━━━━━━━◥◣
-   𝗚𝗢𝗔𝗧 𝗕𝗢𝗧 𝗩𝟮 𝗢𝗡𝗟𝗜𝗡𝗘
-◥◣━━━━━━━━━━━━━━━━◢◤
-
-      『 𝗦𝗬𝗦𝗧𝗘𝗠 𝗔𝗡𝗔𝗟𝗬𝗧𝗜𝗖𝗦 』
-
+◢◤━━━━━━━━━━━━━━◥◣
+⚙️ 𝗦𝗨𝗣𝗣𝗢𝗥𝗧 ➜V2•V3•V5 
+◥◣━━━━━━━━━━━━━━◢◤
+『 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 
+➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑   』
 💠 𝗨𝗽𝘁𝗶𝗺𝗲 𝗦𝘁𝗮𝘁𝘂𝘀:
   »→ ⏲️ 𝗧𝗶𝗺𝗲: ${days}𝗱 ${hours}𝗵 ${mins}𝗺 ${secs}𝘀
   »→ 🛰️ 𝗟𝗮𝘁𝗲𝗻𝗰𝘆: ${Date.now() - event.timestamp}𝗺𝘀
@@ -68,26 +77,31 @@ module.exports = {
   » 🔋 𝗟𝗼𝗮𝗱: [▓▓▓▓▓▓▓░░░]
   » ⚙️ 𝗡𝗼𝗱𝗲: ${process.version}
 
-🕒 𝗧𝗶𝗺𝗲𝗹𝗶𝗻𝗲:
+🕒 𝗧𝗶𝗺𝗲:
   » 📅 𝗗𝗮𝘁𝗲: ${dateNow}
   » ⏰ 𝗧𝗶𝗺𝗲: ${timeNow}
 
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-   👤 𝗢𝘄𝗻𝗲𝗿: -𓆩𝐅𝐀𝐑𝐇𝐀𝐍𓆪
-   🛡️ 𝗦𝘁𝗮𝘁𝘂𝘀: 𝗦𝗲𝗰𝘂𝗿𝗲𝗱 & 𝗢𝗻𝗹𝗶𝗻𝗲
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬`.trim();
+▬▬▬▬▬▬▬▬▬▬▬▬
+   👤 𝗢𝘄𝗻𝗲𝗿: -𓆩𝐒𝐈𝐘𝐀𝐌𓆪
+   🛡️ 𝗦𝘁𝗮𝘁𝘂𝘀: 𝗦𝗲𝗰𝘂𝗿𝗲𝗱 𝗢𝗻𝗹𝗶𝗻𝗲
+▬▬▬▬▬▬▬▬▬▬▬▬`.trim();
 
     try {
-      const stream = (await axios.get(randomGif, { responseType: 'stream' })).data;
+      const stream = (await axios.get(currentVideo, { responseType: 'stream' })).data;
 
-      await api.unsendMessage(sendLoading.messageID);
+      // মেসেজ ওল্ড হয়ে গেলে যেন এরর না আসে তাই ট্রাই-ক্যাচ সেফটি দেওয়া হলো
+      try {
+        await api.unsendMessage(sendLoading.messageID);
+      } catch (e) {
+        console.log("Loading message unsend failed, skipping...");
+      }
       
       return api.sendMessage({
         body: msg,
         attachment: stream
       }, threadID, messageID);
     } catch (error) {
-      return api.editMessage(msg, sendLoading.messageID);
+      return api.editMessage(msg, sendLoading.messageID).catch(() => {});
     }
   }
 };
