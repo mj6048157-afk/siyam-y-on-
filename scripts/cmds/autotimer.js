@@ -5,10 +5,10 @@ const path = require("path");
 
 module.exports.config = {
   name: "autotimer",
-  version: "13.0",
+  version: "13.5",
   role: 0,
   author: "ꜰᴀʀʜᴀɴ-ᴋʜᴀɴ",
-  description: "⏰ Ultimate Anti-Ban Persistent AutoTimer with Storage Cleaner & Backup System",
+  description: "⏰ Fixed & Professional AutoTimer with Safe Mention and Storage Clean",
   category: "AutoTime",
   countDown: 3,
 };
@@ -20,38 +20,33 @@ if (!fs.existsSync(cacheDir)) {
   fs.mkdirSync(cacheDir, { recursive: true });
 }
 
-// ✅ স্ট্যাটাস ও ডুপ্লিকেট প্রোটেকশন ফাইল ইনিশিয়ালাইজেশন (রিস্টার্ট দিলেও স্টেটাস এবং লাস্ট টাইম হারাবে না)
 if (!fs.existsSync(statusFile)) {
   fs.writeJsonSync(statusFile, { enabled: true, lastSentTime: "" });
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// 🔄 নেটওয়ার্ক ফেইলুর হ্যান্ডেল করতে উন্নত ড্যাটা ডাউনলোডার (Timeout + Retry x3 System)
-async function downloadFile(url, destPath, retries = 3) {
-  for (let i = 0; i < retries; i++) {
+// ✅ নেটওয়ার্ক টাইমআউট এবং ৩ বার রিট্রাই সিস্টেম (কোড হ্যাং হওয়া আটকাবে)
+async function downloadFile(url, destPath) {
+  for (let i = 0; i < 3; i++) {
     try {
       const response = await axios.get(url, { 
         responseType: "arraybuffer",
-        timeout: 30000 // ৩০ সেকেন্ড ডাউনলোড টাইমআউট প্রোটেকশন
+        timeout: 30000 
       });
-      
-      // Corrupt Check: মিনিমাম ডাটা সাইজ চেক (ভিডিও অন্তত ৫০KB এর বেশি হতে হবে)
-      if (response.data.byteLength < 50000) {
-        throw new Error("Corrupted or empty file received.");
+      if (response.data.byteLength > 50000) { // Corrupt Check (মিনিমাম ৫০KB)
+        fs.writeFileSync(destPath, Buffer.from(response.data));
+        return true;
       }
-      
-      fs.writeFileSync(destPath, Buffer.from(response.data));
-      return true;
     } catch (err) {
-      console.error(`⚠️ Download attempt ${i + 1} failed for ${url}: ${err.message}`);
-      if (i === retries - 1) return false;
-      await sleep(3000); // ফেইল করলে ৩ সেকেন্ড পর রিট্রাই
+      console.log(`⚠️ Retry ${i + 1} for download...`);
+      await sleep(2000);
     }
   }
+  return false;
 }
 
-// 🧽 স্টোরেজ ক্লিনার (VPS এর মেমোরি এবং স্টোরেজ সেভ করার জন্য)
+// ✅ অটো ক্যাশ ক্লিনার ফাংশন (স্টোরেজ ফুল হওয়া রোধ করবে)
 function cleanCacheFiles() {
   try {
     const files = fs.readdirSync(cacheDir);
@@ -60,13 +55,12 @@ function cleanCacheFiles() {
         fs.unlinkSync(path.join(cacheDir, file));
       }
     }
-    console.log("🧽 Storage Cleanup Done: Old cached videos cleared.");
   } catch (err) {
-    console.error("❌ Cache cleanup error:", err.message);
+    console.log("Clean error:", err.message);
   }
 }
 
-// ✅ ২৪ ঘণ্টার ডেটা সেটআপ (Catbox ডাউন থাকলে রানিং ইমার্জেন্সি ব্যাকআপ CDN লিংকসহ)
+// ⏰ ২৪ ঘণ্টার ডেটাবেজ এবং ব্যাকআপ লিংক (Catbox ডাউন থাকলে রানিং ইমার্জেন্সি CDN)
 const timerData = {
   "12:00 AM": { text: "🌌 এখন রাত ১২টা বাজে❥︎নতুন দিন শুরু হলো ✨", url: "https://files.catbox.moe/2ii8c7.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/12am.mp4" },
   "01:00 AM": { text: "🌙 এখন রাত ১টা বাজে❥︎গভীর রাত, ঘুমাও সবাই 🤫", url: "https://files.catbox.moe/ah0s9r.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/01am.mp4" },
@@ -77,7 +71,7 @@ const timerData = {
   "06:00 AM": { text: "🌞 এখন সকাল ৬টা বাজে❥︎ঘুম থেকে উঠো সবাই ☕", url: "https://files.catbox.moe/3y330y.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/06am.mp4" },
   "07:00 AM": { text: "🍞 এখন সকাল ৭টা বাজে❥︎ব্রেকফাস্ট করে নাও", url: "https://files.catbox.moe/j4fhyp.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/07am.mp4" },
   "08:00 AM": { text: "✨ এখন সকাল ৮টা বাজে❥︎কাজ শুরু করো মন দিয়ে", url: "https://files.catbox.moe/gc2ard.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/08am.mp4" },
-  "09:00 AM": { text: "🕘 এখন সকাল ৯টা বাজে❥︎চল কাজে মন দিই", url: "https://files.catbox.moe/44oya3.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/09am.mp4" },
+  "09:00 AM": { text: "🕘 এখন সকাল ৯টা বাজে❥︎চল কাজে মন দিይ", url: "https://files.catbox.moe/44oya3.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/09am.mp4" },
   "10:00 AM": { text: "☀️ এখন সকাল ১০টা বাজে❥︎তোমাদের মিস করছি", url: "https://files.catbox.moe/ffvnm1.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/10am.mp4" },
   "11:00 AM": { text: "😌 এখন সকাল ১১টা বাজে❥︎কাজ চালিয়ে যাও", url: "https://files.catbox.moe/c5ja93.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/11am.mp4" },
   "12:00 PM": { text: "❤️ এখন দুপুর ১২টা বাজে❥︎ভালোবাসা জানাও সবাইকে", url: "https://files.catbox.moe/56bgjp.mp4", backup: "https://raw.githubusercontent.com/Siyam-Owner/Backup-CDN/main/videos/12pm.mp4" },
@@ -95,90 +89,56 @@ const timerData = {
 };
 
 const startupTexts = [
-  "✅ সিয়াম বস সফলভাবে চালু হয়েছে...!! 👑",
+  "✅ সিয়াম বস সফলভাবে চালু হয়েছে...!! 👑🚀",
   "🥀 কিছু কথা মনে হলে বুকটা কেঁপে ওঠে, আর কিছু মানুষ হারিয়ে গেলে জীবনটাই থমকে দাঁড়ায়..!! 💔",
-  "🖤 ভালো থাকার অভিনয় করতে করতে আজ আমি বড়ই ক্লান্ত, অথচ কেউ আমার ভেতরের ক্ষতটা দেখলো না..!! 🥺",
-  "🥀 অবহেলা জিনিসটা বড্ড বিষাক্ত, যা একটা জ্যান্ত মানুষকে ভেতর থেকে প্রতিনিয়ত কুঁড়ে কুঁড়ে খায়..!! 💔",
-  "⏳ যাকে নিজের চেয়েও বেশি বিশ্বাস করেছিলাম, আজ তার দেওয়া উপহার শুধুই একাকীত্ব আর চোখের জল..!! 🥀"
+  "🖤 ভালো থাকার অভিনয় করতে করতে আজ আমি বড়ই ক্লান্ত, অথচ কেউ আমার ভেতরের ক্ষতটা দেখলো না..!! 🥺"
 ];
 
 module.exports.onLoad = async function ({ api }) {
   console.log("🔥 AUTOTIMER LOADED");
 
-  if (module.exports.config.author !== "ꜰᴀʀʜᴀɴ-ᴋʜᴀɴ") {
-    console.error("❌ Author Changed");
-    return process.exit(1);
-  }
-
-  // 🚀 Memory Leak / Hot Reload Protection (পুরানো ইন্টারভ্যাল থাকলে তা ডিলিট করবে)
   if (global.autotimerInterval) {
     clearInterval(global.autotimerInterval);
   }
 
-  // 🚀 স্টার্টআপ নোটিফিকেশন ফাংশন
+  // 🚀 স্টার্টআপ নোটিফিকেশন ফিক্সড ফাংশন
   const handleStartupAnnouncement = async () => {
-    console.log("🚀 Startup function running");
     try {
       const startupVideoUrl = "https://files.catbox.moe/jjrnjf.mp4";
       const startupVideoPath = path.join(cacheDir, "bot_startup_video.mp4");
       const randomText = startupTexts[Math.floor(Math.random() * startupTexts.length)];  
 
-      // স্টার্টআপ ফাইলটি ডাউনলোড ট্রাই
       const success = await downloadFile(startupVideoUrl, startupVideoPath);
-      if (!success) {
-        console.error("❌ Failed to download startup video after all retries.");
-        return;
-      }
+      if (!success) return;
 
-      const startupMsg = `
-╭───────────────⭓
-│ 🤖 𝗕𝗢𝗧 𝗦𝗧𝗔𝗥𝗧𝗨𝗣 𝗡𝗢𝗧𝗜𝗙𝗬
-├───────────────⭓
-│ ${randomText}
-├───────────────⭓
-│  👑𝗢𝗪𝗡𝗘𝗥 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌 👑
-╰───────────────⭓`;
+      const startupMsg = `╭───────────────⭓\n│ 🤖 𝗕𝗢𝗧 𝗦𝗧𝗔𝗥𝗧𝗨𝗣 𝗡𝗢𝗧𝗜𝗙𝗬\n├───────────────⭓\n│ ${randomText}\n├───────────────⭓\n│  👑𝗢𝗪𝗡𝗘𝗥 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌 👑\n╰───────────────⭓`;
 
-      // 💥 getThreadList(50) ফিক্স করে ২০০+ করা হয়েছে, ব্যর্থ হলে এরর ট্র্যাপ করা হয়েছে
-      let allThreads = [];
-      try {
-        allThreads = await api.getThreadList(250, null, ["INBOX"]);  
-      } catch (e) {
-        console.error("❌ Critical: Group fetch failure. Retrying...");
-        await sleep(5000);
-        allThreads = await api.getThreadList(250, null, ["INBOX"]);
-      }
-      
+      // 💥 getThreadList(250) করা হয়েছে, ২৫০ টা গ্রুপ কভার করবে।
+      const allThreads = await api.getThreadList(250, null, ["INBOX"]);
       const groups = allThreads.filter(thread => thread.isGroup);  
-      console.log("📨 Sending startup message to groups:", groups.length);
 
       for (const thread of groups) {
         api.sendMessage({  
           body: startupMsg,  
           attachment: fs.createReadStream(startupVideoPath)  
         }, thread.threadID, (err, info) => {
-          if (err) {
-            console.error(`❌ Send failed to Group ID [${thread.threadID}]:`, err.message);
-          } else if (info && info.messageID) {  
+          if (!err && info && info.messageID) {  
             setTimeout(() => { api.unsendMessage(info.messageID); }, 30 * 60 * 1000); 
           }  
         });
-        await sleep(5000);
+        await sleep(5000); // সেফটি ডিলে ৫ সেকেন্ড
       }
       
-      // ডাউনলোডের পর স্টোরেজ সেভ করতে স্টার্টআপ ফাইল ডিলিট
-      if (fs.existsSync(startupVideoPath)) fs.unlinkSync(startupVideoPath);
-
+      if (fs.existsSync(startupVideoPath)) fs.unlinkSync(startupVideoPath); // স্টার্টআপ ফাইল ডিলিট
     } catch (err) {  
-      console.error("❌ Error sending startup announcement:", err.message);
+      console.log("Startup error:", err.message);
     }
   };
 
   setTimeout(handleStartupAnnouncement, 5000);
 
-  // অটো টাইমার কোর ফাংশন
+  // ⏱️ প্রতি ঘণ্টার অটো টাইমার ফাংশন
   const checkTimeAndSend = async () => {
-    console.log("⏰ Timer Check:", moment().tz("Asia/Dhaka").format("hh:mm:ss A"));
     try {
       if (!fs.existsSync(statusFile)) return;
       const statusData = fs.readJsonSync(statusFile);
@@ -191,10 +151,10 @@ module.exports.onLoad = async function ({ api }) {
       if (minutes !== "00") return;  
       if (!timerData[now]) return;  
 
-      // 🔴 Duplicate Send Persistent Protection (রিস্টার্ট মারলেও ডুপ্লিকেট হবে না)
+      // 🔴 রিস্টার্ট মারলেও ১ ঘণ্টার ভিডিও ২ বার যাবে না (Persistent Protection)
       if (now !== statusData.lastSentTime) {  
-        // আগের ঘণ্টার ক্যাশ ও আবর্জনা ডিলিট
-        cleanCacheFiles();
+        
+        cleanCacheFiles(); // পুরানো ভিডিও ক্লিয়ার
 
         statusData.lastSentTime = now;
         fs.writeJsonSync(statusFile, statusData);
@@ -202,79 +162,47 @@ module.exports.onLoad = async function ({ api }) {
         const todayDate = currentTime.format("DD-MM-YYYY");  
         const currentHourData = timerData[now];  
           
-        const videoName = `video_${now.replace(/:| /g, "_")}.mp4`;  
-        const videoPath = path.join(cacheDir, videoName);  
+        const videoPath = path.join(cacheDir, `video_${now.replace(/:| /g, "_")}.mp4`);  
 
-        // 🔴 Backup CDN System ইন্টিগ্রেশন
+        // Catbox ডাউন থাকলে অটো ব্যাকআপ CDN লিংক থেকে ডাউনলোড হবে
         let isDownloaded = await downloadFile(currentHourData.url, videoPath);
         if (!isDownloaded) {
-          console.log("⚠️ Primary Link Down! Running Backup CDN System...");
           isDownloaded = await downloadFile(currentHourData.backup, videoPath);
         }
 
-        if (!isDownloaded) {
-          console.error(`❌ Final Error: Both Primary and Backup link down for ${now}`);
-          return;
-        }
+        if (!isDownloaded) return;
 
         const text = currentHourData.text;  
-        const msg = `
-╭───────────────⭓
-│ ⏰ 𝗔𝗨𝗧𝗢 𝗧𝗜𝗠𝗘 𝗡𝗢𝗧𝗘
-├───────────────⭓
-│ 🕒 𝗧𝗜𝗠𝗘 : ${now}
-│ 📅 𝗗𝗔𝗧𝗘 : ${todayDate}
-├───────────────⭓
-│ ${text}
-├───────────────⭓
-│ 👑𝗢𝗪𝗡𝗘𝗥 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌 👑
-╰───────────────⭓`;
+        const msg = `╭───────────────⭓\n│ ⏰ 𝗔𝗨𝗧𝗢 𝗧𝗜𝗠𝗘 𝗡𝗢𝗧𝗘\n├───────────────⭓\n│ 🕒 𝗧𝗜𝗠𝗘 : ${now}\n│ 📅 𝗗𝗔𝗧𝗘 : ${todayDate}\n├───────────────⭓\n│ ${text}\n├───────────────⭓\n│ 👑𝗢𝗪𝗡𝗘𝗥 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌 👑\n╰───────────────⭓`;
 
-        let allThreads = [];
-        try {
-          allThreads = await api.getThreadList(250, null, ["INBOX"]);  
-        } catch (e) {
-          allThreads = await api.getThreadList(250, null, ["INBOX"]);
-        }
-        
+        const allThreads = await api.getThreadList(250, null, ["INBOX"]);  
         const groups = allThreads.filter(thread => thread.isGroup);  
-        console.log("📨 Sending hourly message to groups:", groups.length);
 
         for (const thread of groups) {
-          // 🔴 100% Reliable Custom Mention System (FCA কমপ্যাটিবল)
+          // ✅ আগের মতো অরিজিনাল ও সেফ ফেসবুক মেনশন ফরম্যাট (যা ক্র্যাশ করবে না)
           let mentions = [];
-          let bodyText = msg;
-          
           if (thread.participantIDs && thread.participantIDs.length > 0) {
-            // গ্রুপের সবার আইডিতে হিডেন স্পেস জেনারেট করে প্রপার অল মেনশন ট্র্যাকিং
-            bodyText += "\n🔔";
-            for (const uid of thread.participantIDs) {
-              mentions.push({
-                tag: "@",
-                id: uid,
-                fromIndex: bodyText.length - 1
-              });
-            }
+            const randomUser = thread.participantIDs[Math.floor(Math.random() * thread.participantIDs.length)];
+            mentions.push({
+              tag: "@",
+              id: randomUser
+            });
           }
 
           api.sendMessage({  
-            body: bodyText,  
+            body: msg + " 🔔",  
             mentions: mentions,  
             attachment: fs.createReadStream(videoPath)  
           }, thread.threadID, (err, info) => {  
-            if (err) {
-              console.error(`❌ Thread ID [${thread.threadID}] Send Error:`, err.message);
-            } else if (info && info.messageID) {  
+            if (!err && info && info.messageID) {  
               setTimeout(() => { api.unsendMessage(info.messageID); }, 30 * 60 * 1000);  
             }  
           });
-          await sleep(5000); 
+          await sleep(5000); // ৫ সেকেন্ড সেফটি ডিলে
         }
-
-        console.log("✅ Sent routine video for:", now);  
       }  
     } catch (err) {  
-      console.error("❌ Error in interval:", err.message);  
+      console.log("Timer loop error:", err.message);  
     }
   };
 
@@ -289,39 +217,21 @@ module.exports.onStart = async function ({ api, event, args }) {
   const statusData = fs.readJsonSync(statusFile);
 
   if (!args[0]) {
-    return api.sendMessage(
-      "⚙️ Usage:\n/autotimer on (চালু করতে)\n/autotimer off (বন্ধ করতে)",
-      event.threadID,
-      event.messageID
-    );
+    return api.sendMessage("⚙️ Usage:\n/autotimer on\n/autotimer off", event.threadID, event.messageID);
   }
 
   if (args[0].toLowerCase() === "on") {
-    if (statusData.enabled) {
-      return api.sendMessage("🚨 𝑨𝒖𝒕𝒐 𝑻𝒊𝒎𝒆𝒓 আগেই 𝑶𝑵 আছে 💻", event.threadID, event.messageID);
-    }
+    if (statusData.enabled) return api.sendMessage("🚨 𝑨𝒖𝒕𝒐 𝑻𝒊𝒎𝒆𝒓 আগেই 𝑶𝑵 আছে 💻", event.threadID, event.messageID);
     statusData.enabled = true;
     statusData.lastSentTime = ""; 
     fs.writeJsonSync(statusFile, statusData);
-
-    return api.sendMessage(
-      "╔═════ஜ۩☢۩ஜ═════╗\n   ⏰ 👑 𝐀𝐔𝐓𝐎 𝐓𝐈𝐌𝐄𝐑 𝐎𝐍 ✅\n   ✡️ এখন থেকে অটো ভিডিও যাবে📥\n╚═════ஜ۩☢۩ஜ═════╝",
-      event.threadID,
-      event.messageID
-    );
+    return api.sendMessage("╔═════ஜ۩☢۩ஜ═════╗\n   ⏰ 👑 𝐀𝐔𝐓𝐎 𝐓𝐈𝐌𝐄 𝐎𝐍 ✅\n   ✡️ এখন থেকে অটো ভিডিও যাবে📥\n╚═════ஜ۩☢۩ஜ═════╝", event.threadID, event.messageID);
   }
 
   if (args[0].toLowerCase() === "off") {
-    if (!statusData.enabled) {
-      return api.sendMessage("⌛ 𝙰𝚄𝚃𝙾 𝚃𝙸𝙼𝙴 𝖮𝖥𝖥 আছে 💾", event.threadID, event.messageID);
-    }
+    if (!statusData.enabled) return api.sendMessage("⌛ 𝙰𝚄𝚃𝙾 𝚃𝙸𝙼𝙴 𝖮𝖥𝖥 আছে 💾", event.threadID, event.messageID);
     statusData.enabled = false;
     fs.writeJsonSync(statusFile, statusData);
-
-    return api.sendMessage(
-      "╔═════ஜ۩☢۩ஜ═════╗\n   🔴 𝘼𝙐𝙏𝙊 𝙏𝙄𝙈𝙀𝙍 𝙊𝙁𝙁 ⚙️\n   🔐 এখন আর অটো ভিডিও যাবে না🔕\n╚═════ஜ۩☢۩ஜ═════╝",
-      event.threadID,
-      event.messageID
-    );
+    return api.sendMessage("╔═════ஜ۩☢۩ஜ═════╗\n   🔴 𝘼𝙐𝙏𝙊 𝙏𝙄𝙈𝙀𝙍 𝙊𝙁𝙁 ⚙️\n   🔐 এখন আর অটো ভিডিও যাবে না🔕\n╚═════ஜ۩☢۩ஜ═════╝", event.threadID, event.messageID);
   }
 };
