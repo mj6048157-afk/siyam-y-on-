@@ -51,10 +51,13 @@ module.exports = {
 
 			if (!isOwner)
 				return message.reply(
-`╭〔 ❌ 𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗 ❌ 〕╮
-┃ Only SIYAM Owner Can
-┃ Add New Operator!
-╰━━━━━━━━━━━━━━━╯`
+`┏━━━━━━━━━━━━━━━┓
+┃ ✦ 𝗔𝗖𝗖𝗘𝗦𝗦 𝗗𝗘𝗡𝗜𝗘𝗗 ✦
+┣━━━━━━━━━━━━━━━┫
+┃ 𝗢𝗡𝗟𝗬 𝗦𝗜𝗬𝗔𝗠 𝗢𝗪𝗡𝗘𝗥 
+┃ 𝗖𝗔𝗡 𝗔𝗗𝗗 𝗡𝗘𝗪       
+┃ 𝗢𝗣𝗘𝗥𝗔𝗧𝗢𝗥 !        
+┗━━━━━━━━━━━━━━━━┛`
 				);
 
 			let uids = [];
@@ -94,9 +97,9 @@ module.exports = {
 
 			if (!uids.length)
 				return message.reply(
-`╭〔 ⚠️ 𝗠𝗜𝗦𝗦𝗜𝗡𝗚 𝗨𝗦𝗘𝗥 ⚠️ 〕╮
-┃ Reply / Tag / UID Needed
-╰━━━━━━━━━━━━━━━╯`
+`╭〔📌 𝗠𝗜𝗦𝗦𝗜𝗡𝗚 𝗨𝗦𝗘𝗥 📌 ╮
+┃ 𝗥𝗲𝗽𝗹𝘆 / 𝗧𝗮𝗴 / 𝗨𝗜𝗗 𝗡𝗲𝗲𝗱𝗲𝗱
+╰━━━━━━━━━━━━━━━━╯`
 				);
 
 			const addedUsers = [];
@@ -155,18 +158,18 @@ module.exports = {
 					msg +=
 `╭〔 👑𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 𝆠👑 〕╮
 ┃───────────────
-┃   👑𝆠፝${user.name}-𝐇𝐀𝐒𝐀𝐍 👑
+┃   👑𝆠፝${user.name} 👑
 ┣━━━━━━━━━━━━━━╯
 ┃
 ┃ ✅ 𝐎𝐏𝐄𝐑𝐀𝐓𝐎𝐑 𝐀𝐃𝐃𝐄𝐃
 ┃ ───────────────────
 ┃ ⚜️ 𝐍𝐀𝐌𝐄    : ${user.name}
 ┃ 🆔 𝐔𝐈𝐃      : ${user.uid}
-┃ 💠 𝐑𝐀𝐍𝐊    : Premium Operator
+┃ 💠 𝐑𝐀𝐍𝐊    : 𝘗𝘳𝘦𝘮𝘪𝘶𝘮 𝘖𝘱𝘦𝘳𝘢𝘵𝘰𝘳
 ┃
-┃ 🥂 𝐒𝐓𝐀𝐓𝐔𝐒 : Successfully Added
-┃ 💎 𝐀𝐂𝐂𝐄𝐒𝐒 : Full Permissions
-┃ ✨ 𝐒𝐘𝐒𝐓𝐄𝐌 : Activated Successfully
+┃ 🥂 𝐒𝐓𝐀𝐓𝐔𝐒 : 𝗦𝗨𝗖𝗖𝗘𝗦𝗦𝗙𝗨𝗟𝗟𝗬 𝗔𝗗𝗗𝗘𝗗
+┃ 💎 𝐀𝐂𝐂𝐄𝐒𝐒 : 𝗙𝗨𝗟𝗟 𝗣𝗘𝗥𝗠𝗜𝗦𝗦𝗜𝗢𝗡𝗦
+┃ ✨ 𝐒𝐘𝐒𝐓𝐄𝐌 : 𝗣𝗥𝗘𝗠𝗜𝗨𝗠
 ┃
 ┣━━━━━━━━━━━━━━━╯
 ┃  👑 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧 👑
@@ -184,7 +187,7 @@ module.exports = {
 `╭〔 ⚠️ 𝗔𝗟𝗥𝗘𝗔𝗗𝗬 𝗢𝗣𝗘𝗥𝗔𝗧𝗢𝗥 ⚠️ 〕╮
 ┃ 👤 ${user.name}
 ┃ 🆔 ${user.uid}
-┃ 💎 Already Premium Operator
+┃ 💎 𝙰𝚕𝚛𝚎𝚊𝚍𝚢 𝙿𝚛𝚎𝚖𝚒𝚞𝚖 𝙾𝚙𝚎𝚛𝚊𝚝𝚘𝚛
 ╰━━━━━━━━━━━━━━━╯
 
 `;
@@ -251,9 +254,9 @@ module.exports = {
 
 			if (!uids.length)
 				return message.reply(
-`╭〔 ⚠️ 𝗠𝗜𝗦𝗦𝗜𝗡𝗚 𝗨𝗦𝗘𝗥 ⚠️ 〕╮
-┃ Reply / Tag / UID Needed
-╰━━━━━━━━━━━━━━━╯`
+`┏━ 🔍 𝗠𝗜𝗦𝗦𝗜𝗡𝗚 𝗨𝗦𝗘𝗥 🔍 ━┓
+┃ 𝗥𝗲𝗽𝗹𝘆 / 𝗧𝗮𝗴 / 𝗨𝗜𝗗 𝗡𝗲𝗲𝗱𝗲𝗱
+┗━━━━━━━━━━━━━━━━━┛`
 				);
 
 			const removedUsers = [];
@@ -322,11 +325,10 @@ module.exports = {
 ┃ ───────────────────
 ┃ ⚜️ 𝐍𝐀𝐌𝐄    : ${user.name}
 ┃ 🆔 𝐔𝐈𝐃      : ${user.uid}
-┃ 💠 𝐑𝐀𝐍𝐊    : Premium Operator
-┃
-┃ 💔 𝐒𝐓𝐀𝐓𝐔𝐒 : Removed Successfully
-┃ 🔒 𝐀𝐂𝐂𝐄𝐒𝐒 : Permission Closed
-┃ ⚠️ 𝐒𝐘𝐒𝐓𝐄𝐌 : Operator Access Revoked
+┃ 💠 𝐑𝐀𝐍𝐊      : 𝗣𝗿𝗲𝗺𝗶𝘂𝗺 𝗢𝗽𝗲𝗿𝗮𝘁𝗼𝗿
+┃ 💔 𝗦𝗧𝗔𝗧𝗨𝗦    : 𝗥𝗲𝗺𝗼𝘃𝗲𝗱 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆
+┃ 🔒 𝗔𝗖𝗖𝗘𝗦𝗦    : 𝗣𝗲𝗿𝗺𝗶𝘀𝘀𝗶𝗼𝗻 𝗖𝗹𝗼𝘀𝗲𝗱
+┃ ⚠️ 𝗦𝗬𝗦𝗧𝗘𝗠    : 𝗢𝗽𝗲𝗿𝗮𝘁𝗼𝗿 𝗔𝗰𝗰𝗲𝘀𝘀 𝗥𝗲𝘃𝗼𝗸𝗲𝗱
 ┃
 ┣━━━━━━━━━━━━━━━╯
 ┃  👑 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧 👑
@@ -344,7 +346,7 @@ module.exports = {
 `╭〔 ⚠️ 𝗡𝗢𝗧 𝗢𝗣𝗘𝗥𝗔𝗧𝗢𝗥 ⚠️ 〕╮
 ┃ 👤 ${user.name}
 ┃ 🆔 ${user.uid}
-┃ ❌ Not In Operator List
+┃ ❌ 𝗡𝗼𝘁 𝗜𝗻 𝗢𝗽𝗲𝗿𝗮𝘁𝗼𝗿 𝗟𝗶𝘀𝘁 ⛔
 ╰━━━━━━━━━━━━━━━╯
 
 `;
@@ -405,7 +407,7 @@ module.exports = {
 ┃
 ┃ ⚙️ 𝐏𝐑𝐄𝐌𝐈𝐔𝐌 𝐎𝐏𝐄𝐑𝐀𝐓𝐎𝐑 𝐋𝐈𝐒𝐓
 ┃ ───────────────────
-${listText || "┃ ❌ No Operators Found"}
+${listText || "┃ ❌  𝗡𝗢 𝗢𝗣𝗘𝗥𝗔𝗧𝗢𝗥𝗦 𝗙𝗢𝗨𝗡𝗗 📭"}
 ┣━━━━━━━━━━━━━━━╯
 ┃  👑 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧 👑
 ╰━━━━━━━━━━━━━━━╯`
