@@ -5,8 +5,8 @@ const mongoose = require('mongoose');
 
 module.exports = {
   config: {
-    name: "uptime2",
-    aliases: ["up2", "upt2"],
+    name: "uptime3",
+    aliases: ["up3", "upt3"],
     version: "8.1.0",
     role: 0,
     author: "xalman",
@@ -57,34 +57,29 @@ module.exports = {
     global.uptimeVideoIndex = (global.uptimeVideoIndex + 1) % gifLinks.length;
 
     const msg = `
-◢◤━━━━━━━━━━━━━━◥◣
-⚙️ 𝗦𝗨𝗣𝗣𝗢𝗥𝗧 ➜V2•V3•V5 
-◥◣━━━━━━━━━━━━━━◢◤
+◢◤━━━━━━━━━━━━◥◣
+⚙️ 𝗦𝗨𝗣𝗣𝗢𝗥𝗧 ➜•V3•V5 
+◥◣━━━━━━━━━━━━◢◤
 『 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 
 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑   』
 💠 𝗨𝗽𝘁𝗶𝗺𝗲 𝗦𝘁𝗮𝘁𝘂𝘀:
   »→ ⏲️ 𝗧𝗶𝗺𝗲: ${days}𝗱 ${hours}𝗵 ${mins}𝗺 ${secs}𝘀
   »→ 🛰️ 𝗟𝗮𝘁𝗲𝗻𝗰𝘆: ${Date.now() - event.timestamp}𝗺𝘀
   »→ 🌐 𝗦𝘁𝗮𝘁𝘂𝘀: 𝗔𝗰𝘁𝗶𝘃𝗲 ✔️
-
 🍃 𝗗𝗮𝘁𝗮𝗯𝗮𝘀𝗲 (𝗠𝗼𝗻𝗴𝗼𝗼𝘀𝗲):
   »~ 🔌 𝗦𝘁𝗮𝘁𝘂𝘀: ${dbStatus}
   » 📁 𝗗𝗕 𝗡𝗮𝗺𝗲: TBTNX210
   » 🧬 𝗗𝗿𝗶𝘃𝗲𝗿: v${mongoose.version}
-
 ⚡ 𝗥𝗲𝘀𝗼𝘂𝗿𝗰𝗲𝘀:
   » 💾 𝗥𝗔𝗠: ${usedRam}𝗠𝗕 / ${totalRam}𝗚𝗕
   » 🔋 𝗟𝗼𝗮𝗱: [▓▓▓▓▓▓▓░░░]
   » ⚙️ 𝗡𝗼𝗱𝗲: ${process.version}
-
 🕒 𝗧𝗶𝗺𝗲:
   » 📅 𝗗𝗮𝘁𝗲: ${dateNow}
   » ⏰ 𝗧𝗶𝗺𝗲: ${timeNow}
-
 ▬▬▬▬▬▬▬▬▬▬▬▬
    👤 𝗢𝘄𝗻𝗲𝗿: -𓆩𝐒𝐈𝐘𝐀𝐌𓆪
-   🛡️ 𝗦𝘁𝗮𝘁𝘂𝘀: 𝗦𝗲𝗰𝘂𝗿𝗲𝗱 𝗢𝗻𝗹𝗶𝗻𝗲
-▬▬▬▬▬▬▬▬▬▬▬▬`.trim();
+   `.trim();
 
     try {
       const stream = (await axios.get(currentVideo, { responseType: 'stream' })).data;
