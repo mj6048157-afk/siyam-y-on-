@@ -94,7 +94,7 @@ module.exports = {
     const badWordsMap = {
       "ভুদা": "https://files.catbox.moe/gnyx0p.mp3",  
       "আসো হাত মারি": "https://files.catbox.moe/8ioph1.mp3",  
-      "মাদারচোদ চামচা": "https://tmpfiles.org/dl/wwwq6rpmRD0h/upload_1779657408207.mp3"
+      "🖕": "https://files.catbox.moe/n4kdj7.mp3"
     };
 
     const exactMatchMap = {  
