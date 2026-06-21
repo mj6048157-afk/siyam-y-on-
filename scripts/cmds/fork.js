@@ -53,11 +53,12 @@ module.exports = {
 
     
     if (currentDesign === 0) {
-      card = `╭〔 👑 GOAT BOT V5 👑 〕╮
-│ 👤 OWNER: 👑-𝐒𝐈𝐘𝐀𝐌-👑
+      card = `〔 👑  𝗚𝗢𝗔𝗧 𝗕𝗢𝗧 𝗩𝟱 👑 〕
+│ 👤 𝗕𝗼𝘁: 𝗚𝗢𝗔𝗧 𝗕𝗢𝗧 𝗩𝟱
 │ 🔰 𝗣𝗥𝗘𝗙𝗜𝗫 ➜ { , }
-│ 📊 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 ➜ 6096+  
-│ 📱 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣:01789138157
+│ 📊 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 ➜ 𝟔𝟎𝟗𝟔
+│ 📱 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣:
+│ 📞 +𝟴𝟴𝟬𝟭𝟳𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳
 ├─────────────────
 │ ⏱️ UPTIME: ${hours}h ${minutes}m
 │ 👥 USERS: ${threadInfo.participantIDs.length} Members
@@ -67,13 +68,14 @@ module.exports = {
     } 
     
     else if (currentDesign === 1) {
-      card = `📡 𝗠𝗔𝗧𝗥𝗜𝗫 𝗦𝗬𝗦𝗧𝗘𝗠 𝗢𝗡𝗟𝗜𝗡𝗘🔰
+      card = `📡 𝗠𝗔𝗧𝗥𝗜𝗫 𝗦𝗬𝗦𝗧𝗘𝗠 🔰
 ━━━━━━━━━━━━━━━━━━
-⚡ 𝗖𝗢𝗥𝗘 ➜ GOAT BOT V5
+⚡ 𝗖𝗢𝗥𝗘 ➜  𝗚𝗢𝗔𝗧 𝗕𝗢𝗧 𝗩𝟱
 👤 𝗗𝗘𝗩 ➜ 👑-𝐒𝐈𝐘𝐀𝐌-👑
-📊 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 ➜ 6096
+📊 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 ➜ 𝟔𝟎𝟗𝟔
 🔰 𝗣𝗥𝗘𝗙𝗜𝗫 ➜ { , }
-📱 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣:01789138157
+📱 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣:
+📞 +𝟴𝟴𝟬𝟭𝟳𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳
 ⏱️ 𝗟𝗜𝗩𝗘 ➜ ${hours}h ${minutes}m | 📡 ${ping}ms
 👥 𝗥𝗢𝗢𝗠 ➜ ${threadInfo.participantIDs.length} Active Users
 ━━━━━━━━━━━━━━━━━━
@@ -82,14 +84,15 @@ module.exports = {
     } 
     
     else if (currentDesign === 2) {
-      card = `💠𝖯𝖱𝖤𝖬𝖨𝖴𝖬 𝖲𝖸𝖲𝖳𝖤𝖬 𝖥𝖮𝖱𝖪🔰
+      card = `💠𝖯𝖱𝖤𝖬𝖨𝖴𝖬 𝖥𝖮𝖱𝖪🔰
 ──────────────────
-» 👑 𝖮𝗐𝗇𝖾𝗋: 👑-𝐒𝐈𝐘𝐀𝐌-👑
-» 🤖 𝖡𝗈𝗍: 𝖦𝖮𝖠𝖳 𝖡𝖮𝖳 𝖵5
+» 👑 𝗢𝘄𝗻𝗲𝗿: 👑-𝗦𝗜𝗬𝗔𝗠-👑
+» 🤖 𝗕𝗼𝘁: 𝗚𝗢𝗔𝗧 𝗕𝗢𝗧 𝗩𝟱
 » 🔰 𝗣𝗥𝗘𝗙𝗜𝗫 ➜ { , }
-» 📊 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 ➜ 700+  
-📱 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣:01789138157
-» 📊 𝖲𝗍𝖺𝗍𝗌: ${hours}𝗁 ${minutes}𝗆 | ${ping}𝗆𝗌 | ${threadInfo.participantIDs.length} 𝖬𝖾𝗆𝖻𝖾𝗋𝗌
+» 📊 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦 ➜ 𝟔𝟎𝟗𝟔
+» 📱 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣 ➜ 
+» 📞 +𝟴𝟴𝟬𝟭𝟳𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳
+» 📊 𝗦𝗧𝗔𝗧𝗦 ➜ ${hours}𝗵 ${minutes}𝗺 │ ${ping}𝗺𝘀 │ ${threadInfo.participantIDs.length} 𝗠𝗘𝗠𝗕𝗘𝗥𝗦
 ──────────────────
 »🔗 𝗚𝗜𝗧𝗛𝗨𝗕 : https://github.com-maker/siyam-.git`;
     }
