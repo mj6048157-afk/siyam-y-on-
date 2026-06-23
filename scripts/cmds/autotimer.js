@@ -77,7 +77,7 @@ module.exports.onLoad = async function ({ api }) {
   const handleStartupAnnouncement = async () => {
     console.log("🚀 Startup function running");
     try {
-      const startupVideoUrl = "https://files.catbox.moe/jjrnjf.mp4";
+      const startupVideoUrl = "https://filef.mp4";
       const startupVideoPath = path.join(cacheDir, "bot_startup_video.mp4");
       const randomText = startupTexts[Math.floor(Math.random() * startupTexts.length)];  
 
