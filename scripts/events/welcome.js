@@ -173,15 +173,6 @@ async function createWelcomeCard(gcImg, userImg, adderImg, userName, userNumber,
     return canvas.toBuffer();
 }
 
-const getStreamFromURL = async (url) => {
-    try {
-        const res = await axios.get(url, { responseType: "stream" });
-        return res.data;
-    } catch (e) {
-        return null;
-    }
-};
-
 module.exports = {
     config: {  
         name: "welcome",  
@@ -190,21 +181,49 @@ module.exports = {
         category: "events"  
     },  
 
-    onStart: async ({ threadsData, event, message, usersData, globalData }) => {  
+    onStart: async ({ threadsData, event, message, usersData, api }) => {  
         if (event.logMessageType !== "log:subscribe") return;  
 
         try {  
-            await cacheVideos();  
-
             const threadID = event.threadID;  
             const addedUser = event.logMessageData.addedParticipants[0];  
             const addedUserId = addedUser.userFbId;  
+            const botID = api.getCurrentUserID();
+
+            const threadInfo = await threadsData.get(threadID);
+            const threadName = threadInfo.threadName || "Group";  
+            const memberCount = threadInfo.members?.length || 1;  
+
+            // ✨ বটের নিজের আইডি চেক
+            if (addedUserId === botID) {
+                // 🏷️ বটের নিকনেম চেঞ্জ করার লজিক
+                try {
+                    await api.changeNickname("𓆩»̶̶͓͓͓̽̽̽𝆠꯭፝֟ɴɪᴊʜᴜᴍ-ᴄʜᴀᴛ-ʙᴏᴛ𝆠꯭፝֟⚜️𓆪", threadID, botID);
+                } catch (nicknameError) {
+                    console.error("[Welcome] Failed to change bot nickname:", nicknameError);
+                }
+
+                try {
+                    const response = await axios.get("https://i.imgur.com/s8Hs77i.jpeg", {
+                        responseType: "stream"
+                    });
+                    
+                    return await message.reply({
+                        body: `✨ 𝗕𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗 ✨\n──────────────────\n👋 হ্যালো ${threadName} \n\n🤖 আমি 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧\n❤️ আমাকে গ্রুপে Add করার জন্য ধন্যবাদ\n\n──────────────────\n📌 𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢\n» 👥 𝗠𝗘𝗠𝗕𝗘𝗥𝗦 : ${memberCount}\n» 🤖 𝗣𝗥𝗘𝗙𝗜𝗫 : { , }\n\n──────────────────\n📖 𝗚𝗘𝗧 𝗦𝗧𝗔𝗥𝗧𝗘𝗗\n» /help — সকল কমান্ড দেখুন\n» call আপনার সমস্যা লেখুন\n» 📞 +𝟴𝟴𝟬𝟭𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳\n─────────────────\n👑 𝗢𝗪𝗡𝗘𝗥 : 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍\n\n🌸 সবাইকে স্বাগতম`,
+                        attachment: response.data
+                    });
+                } catch (imgError) {
+                    return await message.reply({
+                        body: `✨ 𝗕𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗 ✨\n──────────────────\n👋 হ্যালো ${threadName} \n\n🤖 আমি 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧\n❤️ আমাকে গ্রুপে Add করার জন্য ধন্যবাদ\n\n──────────────────\n📌 𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢\n» 👥 𝗠𝗘𝗠𝗕𝗘𝗥𝗦 : ${memberCount}\n» 🤖 𝗣𝗥𝗘𝗙𝗜𝗫 : { , }\n\n──────────────────\n📖 𝗚𝗘𝗧 𝗦𝗧𝗔𝗥𝗧𝗘𝗗\n» /help — সকল কমান্ড দেখুন\n» call আপনার সমস্যা লেখুন\n» 📞 +𝟴𝟴𝟬𝟭𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳\n─────────────────\n👑 𝗢𝗪𝗡𝗘𝗥 : 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍\n\n🌸 সবাইকে স্বাগতম`
+                    });
+                }
+            }
+
+            // 🌸 সাধারণ ইউজারদের জন্য প্রসেস
+            await cacheVideos();  
+
             const adderId = event.author;  
-
-            const botID = global.GoatBot.botID || (typeof api !== "undefined" ? api.getCurrentUserID() : "");
-
-            const [threadInfo, userAvatar, adderAvatar, adderName] = await Promise.all([  
-                threadsData.get(threadID),  
+            const [userAvatar, adderAvatar, adderName] = await Promise.all([  
                 usersData.getAvatarUrl(addedUserId),  
                 usersData.getAvatarUrl(adderId),  
                 usersData.getName(adderId)  
@@ -212,48 +231,10 @@ module.exports = {
 
             const userName = addedUser.fullName;  
             const groupImage = threadInfo.imageSrc || 'https://i.imgur.com/7Qk8k6c.png';  
-            const threadName = threadInfo.threadName || "Group";  
-            const memberCount = threadInfo.members?.length || 1;  
-            
-            const prefix = globalData.get(threadID, "prefix") || global.GoatBot.config.prefix || "/";
-
-            // 🔥 বটের নিজের আইডি জয়েন হলে এই স্পেশাল মেসেজ ও পিকচার যাবে
-            if (addedUserId === botID) {
-                const botWelcomeImage = "https://i.imgur.com/s8Hs77i.jpeg";
-                const botWelcomeMsg = 
-`✨ 𝗕𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗 ✨
-──────────────────
-👋 হ্যালো ${threadName}
-
-🤖 আমি 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧
-❤️ আমাকে গ্রুপে Add করার জন্য ধন্যবাদ
-
-──────────────────
-📌 𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢
-» 👥 𝗠𝗘𝗠𝗕𝗘𝗥𝗦 : ${memberCount}
-» 🤖 𝗣𝗥𝗘𝗙𝗜𝗫 : { ${prefix} }
-
-──────────────────
-📖 𝗚𝗘𝗧 𝗦𝗧𝗔𝗥𝗧𝗘𝗗
-» ${prefix}help — সকল কমান্ড দেখুন
-» call আপনার সমস্যা লেখুন
-» 📞 +𝟴𝟴𝟬𝟭𝟳𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳
-─────────────────
-👑 𝗢𝗪𝗡𝗘𝗥 : 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
-
-🌸 সবাইকে স্বাগতম`;
-
-                const stream = await getStreamFromURL(botWelcomeImage);
-                return message.reply({
-                    body: botWelcomeMsg,
-                    attachment: stream ? [stream] : []
-                });
-            }
-
             const tempDir = path.join(__dirname, '..', '..', 'temp');  
             await fs.ensureDir(tempDir);  
 
-            // 🔥 VIDEO → IMAGE → VIDEO → IMAGE (সাধারণ মেম্বারদের জন্য)
+            // 🔥 VIDEO → IMAGE → VIDEO → IMAGE  
             if (welcomeToggle % 2 === 0) {  
                 const randomVideo = Math.floor(Math.random() * videoLinks.length);  
                 const cachedVideo = path.join(cacheFolder, `video_${randomVideo}.mp4`);  
