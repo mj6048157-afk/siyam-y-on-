@@ -203,20 +203,35 @@ module.exports = {
                     console.error("[Welcome] Failed to change bot nickname:", nicknameError);
                 }
 
+                // 🖼️ ইমেজ বাফার হিসেবে ডাউনলোড লজিক (যাতে ইমেজ মিস না হয়)
+                let imageStream;
                 try {
-                    const response = await axios.get("https://i.imgur.com/s8Hs77i.jpeg", {
-                        responseType: "stream"
+                    const imgResponse = await axios.get("https://i.imgur.com/s8Hs77i.jpeg", {
+                        responseType: "arraybuffer"
                     });
+                    const tempDir = path.join(__dirname, '..', '..', 'temp');
+                    await fs.ensureDir(tempDir);
+                    const botJoinImgPath = path.join(tempDir, `bot_join_${Date.now()}.jpeg`);
+                    fs.writeFileSync(botJoinImgPath, Buffer.from(imgResponse.data));
+                    imageStream = fs.createReadStream(botJoinImgPath);
                     
-                    return await message.reply({
-                        body: `✨ 𝗕𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗 ✨\n──────────────────\n👋 হ্যালো ${threadName} \n\n🤖 আমি 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧\n❤️ আমাকে গ্রুপে Add করার জন্য ধন্যবাদ\n\n──────────────────\n📌 𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢\n» 👥 𝗠𝗘𝗠𝗕𝗘𝗥𝗦 : ${memberCount}\n» 🤖 𝗣𝗥𝗘𝗙𝗜𝗫 : { , }\n\n──────────────────\n📖 𝗚𝗘𝗧 𝗦𝗧𝗔𝗥𝗧𝗘𝗗\n» /help — সকল কমান্ড দেখুন\n» call আপনার সমস্যা লেখুন\n» 📞 +𝟴𝟴𝟬𝟭𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳\n─────────────────\n👑 𝗢𝗪𝗡𝗘𝗥 : 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍\n\n🌸 সবাইকে স্বাগতম`,
-                        attachment: response.data
-                    });
+                    // ফাইল পাঠানোর পর রিমুভ করার জন্য ট্র্যাকিং
+                    setTimeout(() => {
+                        if (fs.existsSync(botJoinImgPath)) fs.unlinkSync(botJoinImgPath);
+                    }, 15000);
                 } catch (imgError) {
-                    return await message.reply({
-                        body: `✨ 𝗕𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗 ✨\n──────────────────\n👋 হ্যালো ${threadName} \n\n🤖 আমি 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧\n❤️ আমাকে গ্রুপে Add করার জন্য ধন্যবাদ\n\n──────────────────\n📌 𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢\n» 👥 𝗠𝗘𝗠𝗕𝗘𝗥𝗦 : ${memberCount}\n» 🤖 𝗣𝗥𝗘𝗙𝗜𝗫 : { , }\n\n──────────────────\n📖 𝗚𝗘𝗧 𝗦𝗧𝗔𝗥𝗧𝗘𝗗\n» /help — সকল কমান্ড দেখুন\n» call আপনার সমস্যা লেখুন\n» 📞 +𝟴𝟴𝟬𝟭𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳\n─────────────────\n👑 𝗢𝗪𝗡𝗘𝗥 : 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍\n\n🌸 সবাইকে স্বাগতম`
-                    });
+                    console.error("[Welcome] Bot image download failed:", imgError.message);
                 }
+
+                const msgPayload = {
+                    body: `✨ 𝗕𝗢𝗧 𝗖𝗢𝗡𝗡𝗘𝗖𝗧𝗘𝗗 ✨\n──────────────────\n👋 হ্যালো BOT EXPOSED 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 \n\n🤖 আমি 𝗡𝗜𝗝𝗛𝗨𝗠 𝗕𝗢𝗧\n❤️ আমাকে গ্রুপে Add করার জন্য ধন্যবাদ\n\n──────────────────\n📌 𝗚𝗥𝗢𝗨𝗣 𝗜𝗡𝗙𝗢\n» 👥 𝗠𝗘𝗠𝗕𝗘𝗥𝗦 : ${memberCount}\n» 🤖 𝗣𝗥𝗘𝗙𝗜𝗫 : { , }\n\n──────────────────\n📖 𝗚𝗘𝗧 𝗦𝗧𝗔𝗥𝗧𝗘𝗗\n» /help — সকল কমান্ড দেখুন\n» call আপনার সমস্যা লেখুন\n» 📞 +𝟴𝟴𝟬𝟭𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳\n─────────────────\n👑 𝗢𝗪𝗡𝗘𝗥 : 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍\n\n🌸 সবাইকে স্বাগতম`
+                };
+
+                if (imageStream) {
+                    msgPayload.attachment = imageStream;
+                }
+
+                return await message.reply(msgPayload);
             }
 
             // 🌸 সাধারণ ইউজারদের জন্য প্রসেস
