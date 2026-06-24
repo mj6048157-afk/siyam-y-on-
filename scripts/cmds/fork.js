@@ -64,7 +64,7 @@ module.exports = {
 │ 👥 USERS: ${threadInfo.participantIDs.length} Members
 │ 📡 PING: ${ping}ms
 ├─────────────────
-│ 🔗 𝗚𝗜𝗧𝗛𝗨𝗕 : https:/github.com-maker/siyam-.git`;
+│ 🔗 𝗚𝗜𝗧𝗛𝗨𝗕 : https://github.com/badolvaiO07/BADOL-BOT-V5`;
     } 
     
     else if (currentDesign === 1) {
@@ -80,7 +80,7 @@ module.exports = {
 👥 𝗥𝗢𝗢𝗠 ➜ ${threadInfo.participantIDs.length} Active Users
 ━━━━━━━━━━━━━━━━━━
 📥 𝗚𝗜𝗧𝗛𝗨𝗕 𝗥𝗘𝗣𝗢𝗦𝗜𝗧𝗢𝗥𝗬
-🔗 𝗚𝗜𝗧𝗛𝗨𝗕 : https://github.com-maker/siyam-.git`;
+🔗 𝗚𝗜𝗧𝗛𝗨𝗕 : https://github.com/badolvai0O7/BADOL-BOT-V5`;
     } 
     
     else if (currentDesign === 2) {
@@ -94,7 +94,7 @@ module.exports = {
 » 📞 +𝟴𝟴𝟬𝟭𝟳𝟴𝟵𝟭𝟯𝟴𝟭𝟱𝟳
 » 📊 𝗦𝗧𝗔𝗧𝗦 ➜ ${hours}𝗵 ${minutes}𝗺 │ ${ping}𝗺𝘀 │ ${threadInfo.participantIDs.length} 𝗠𝗘𝗠𝗕𝗘𝗥𝗦
 ──────────────────
-»🔗 𝗚𝗜𝗧𝗛𝗨𝗕 : https://github.com-maker/siyam-.git`;
+»🔗 𝗚𝗜𝗧𝗛𝗨𝗕 : https://github.com/badolvai0O7/BADOL-BOT-V5`;
     }
 
     
