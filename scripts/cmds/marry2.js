@@ -1,105 +1,112 @@
 const fs = require("fs-extra");
-const Canvas = require("canvas");
 const path = require("path");
+const axios = require("axios");
 
 module.exports = {
-  config: {
-    name: "marry",
-    aliases: ["married", "biya", "engage"], 
-    version: "3.7",
-    author: "xalman",
-    countDown: 5,
-    role: 0,
-    shortDescription: "Propose with custom image",
-    longDescription: "Generate a propose image with avatars perfectly placed over characters’ heads (swapped).",
-    category: "fun",
-    guide: "{pn} @mention"
-  },
+config: {
+name: "media",
+aliases: ["audio1", "audio2", "watch1", "watch2"],
+version: "5.0.0",
+author: "Milon",
+countDown: 5,
+role: 2,
+category: "media",
+usePrefix: false 
+},
 
-  onStart: async function ({ message, event, usersData }) {
-    const mention = Object.keys(event.mentions);
-    if (mention.length === 0)
-      return message.reply(" plz mention someone");
+/* --- [ 🔐 FILE_CREATOR_INFORMATION ] ---
+* 🤖 BOT NAME: MILON BOT
+* 👤 OWNER: MILON HASAN 
+* 📍 LOCATION: NARAYANGANJ, BANGLADESH
+* 🛠️ PROJECT: MILON BOT PROJECT (2026)
+* --------------------------------------- */
 
-    const senderID = event.senderID;
-    const mentionedID = mention[0];
+onChat: async function ({ api, event, message }) {
+if (!event.body) return;
+const body = event.body.toLowerCase().trim();
 
-    try {
-      const nameSender = await usersData.getName(senderID);
-      const nameMentioned = await usersData.getName(mentionedID);
-      const avatarSender =
-        (await usersData.getAvatarUrl(senderID)) ||
-        `https://graph.facebook.com/${senderID}/picture?width=512&height=512`;
-      const avatarMentioned =
-        (await usersData.getAvatarUrl(mentionedID)) ||
-        `https://graph.facebook.com/${mentionedID}/picture?width=512&height=512`;
+// ট্রিগার চেক
+const isAudio = body.startsWith("audio1") || body.startsWith("audio2");
+const isVideo = body.startsWith("watch1") || body.startsWith("watch2");
 
-      const [avatarImgSender, avatarImgMentioned, bg] = await Promise.all([
-        Canvas.loadImage(avatarSender),
-        Canvas.loadImage(avatarMentioned),
-        Canvas.loadImage("https://i.postimg.cc/VvjW9DwJ/images-8.jpg")
-      ]);
+if (isAudio || isVideo) {
+let query = "";
+const args = event.body.split(/\s+/);
+args.shift();
+const inputQuery = args.join(" ");
 
-      const canvasWidth = 1280;
-      const canvasHeight = 1280;
-      const canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
-      const ctx = canvas.getContext("2d");
+// --- [ 🔄 REPLY LOGIC ] ---
+// যদি মেসেজে রিপ্লাই দেওয়া হয়, তবে রিপ্লাই করা মেসেজের টেক্সট নিবে
+if (event.messageReply && event.messageReply.body) {
+query = event.messageReply.body;
+} else {
+query = inputQuery;
+}
 
-      ctx.drawImage(bg, 0, 0, canvasWidth, canvasHeight);
+if (!query) {
+return message.reply(`❌ মামা, গানের নাম দাও অথবা কোনো মেসেজে রিপ্লাই দিয়ে ${body.split(" ")[0]} লেখো!`);
+}
 
-      const avatarSize = Math.floor(canvasWidth * 0.11);
-      const girlHead = { x: 470, y: 310 };
-      const boyHead = { x: 690, y: 200 };
+const waitMsg = await message.reply(`🔍 Searching for "${query}"...\n⏳ Please wait...`);
 
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(
-        girlHead.x + avatarSize / 2,
-        girlHead.y + avatarSize / 2,
-        avatarSize / 2,
-        0,
-        Math.PI * 2
-      );
-      ctx.clip();
-      ctx.drawImage(avatarImgMentioned, girlHead.x, girlHead.y, avatarSize, avatarSize);
-      ctx.restore();
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(
-        boyHead.x + avatarSize / 2,
-        boyHead.y + avatarSize / 2,
-        avatarSize / 2,
-        0,
-        Math.PI * 2
-      );
-      ctx.clip();
-      ctx.drawImage(avatarImgSender, boyHead.x, boyHead.y, avatarSize, avatarSize);
-      ctx.restore();
+try {
+// --- [ 🌐 STEP 1: SEARCH ] ---
+const searchRes = await axios.get(`https://betadash-search-download.vercel.app/yt?search=${encodeURIComponent(query)}`);
+const data = searchRes.data[0];
 
-      const tmpDir = path.join(__dirname, "tmp");
-      await fs.ensureDir(tmpDir);
-      const imgPath = path.join(tmpDir, `${senderID}_${mentionedID}_marry.png`);
-      await fs.writeFile(imgPath, canvas.toBuffer("image/png"));
+if (!data || !data.url) return api.editMessage("⚠️ No results found on YouTube.", waitMsg.messageID);
 
-      const text =
-        senderID === mentionedID
-          ? "নিজেকে নিজেকে বিয়ে করবে ? 😂"
-          : `💍 ${nameSender} এর বিয়ে${nameMentioned}- এর সাথে 🥰❤️`;
+const ytUrl = data.url;
+const title = data.title;
+await api.editMessage(`🎬 Found: ${title}\n⬇️ Downloading ${isAudio ? 'Audio' : 'Video'}...`, waitMsg.messageID);
 
-      await message.reply(
-        {
-          body: text,
-          attachment: fs.createReadStream(imgPath)
-        },
-        () => fs.unlink(imgPath).catch(() => {})
-      );
+const cacheDir = path.join(process.cwd(), "cache");
+if (!fs.existsSync(cacheDir)) fs.ensureDirSync(cacheDir);
+const filePath = path.join(cacheDir, `${isAudio ? 'audio' : 'video'}_${Date.now()}.${isAudio ? 'mp3' : 'mp4'}`);
 
-      canvas.width = canvas.height = 0;
-      global.gc && global.gc();
+let downloadUrl = null;
 
-    } catch (err) {
-      console.error("❌ Error in marry command:", err);
-      message.reply(`error!\n${err.message}`);
-    }
-  }
+// --- [ 🎶 AUDIO/VIDEO FALLBACK ] ---
+if (isAudio) {
+try {
+const res1 = await axios.get(`https://yt-mp3-imran.vercel.app/api?url=${encodeURIComponent(ytUrl)}`);
+downloadUrl = res1.data.downloadUrl;
+} catch (e) {
+const res2 = await axios.get(`https://mahabub-apis.fun/mahabub/ytmp3v2?url=${encodeURIComponent(ytUrl)}`);
+downloadUrl = res2.data.data.link;
+}
+} else {
+try {
+const res1 = await axios.get(`https://yt-api-imran.vercel.app/api?url=${encodeURIComponent(ytUrl)}`);
+downloadUrl = res1.data.downloadUrl;
+} catch (e) {
+const res2 = await axios.get(`https://mahabub-apis.fun/mahabub/ytmp4?url=${encodeURIComponent(ytUrl)}`);
+downloadUrl = res2.data.formats.find(f => f.quality === "360p")?.url || res2.data.formats[0].url;
+}
+}
+
+if (!downloadUrl) throw new Error("APIs are down.");
+
+// --- [ ⬇️ STEP 2: DOWNLOAD & SEND ] ---
+const response = await axios({ method: "get", url: downloadUrl, responseType: "stream" });
+const writer = fs.createWriteStream(filePath);
+response.data.pipe(writer);
+
+writer.on("finish", async () => {
+await api.unsendMessage(waitMsg.messageID).catch(() => {});
+await message.reply({
+body: `⬇️ 𝘿𝙊𝙒𝙉𝙇𝙊𝘼𝘿 𝘾𝙊𝙈𝙋𝙇𝙀𝙏𝙀 ⬇️\n📌 Title: ${title}\⚡ 𝙋𝙊𝙒𝙀𝙍 𝘽𝙔 ⚡
+『 𝐒𝐈𝐘𝐀𝐌- 𝙋𝙍𝙊 』`,
+attachment: fs.createReadStream(filePath),
+});
+if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+});
+
+} catch (err) {
+api.editMessage(`❌ Failed to process. APIs are down.`, waitMsg.messageID);
+}
+}
+},
+
+onStart: async function () {} 
 };
