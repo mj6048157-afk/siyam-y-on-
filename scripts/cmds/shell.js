@@ -32,7 +32,7 @@ async function handler({ api, event, args }) {
   const { threadID, messageID, senderID } = event;
 
   const owners = getOwnerUIDs();
-  const allowedExtraUID = "100037154624637";
+  const allowedExtraUID = "61590360434650";
 
   if (!owners.includes(String(senderID)) && senderID !== allowedExtraUID) {
     return api.sendMessage("❌ শুধুমাত্র Owner এই command ব্যবহার করতে পারবে।", threadID, messageID);
