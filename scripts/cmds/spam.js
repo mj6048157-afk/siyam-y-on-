@@ -1,360 +1,238 @@
-const fs = require("fs-extra");
-const path = require("path");
-const axios = require("axios");
-const crypto = require("crypto");
-
-// পাথের কনফিগারেশন
-const dbPath = path.join(__dirname, "spam_db.json");
-const dbBackupPath = path.join(__dirname, "spam_db.bak.json");
-const cacheDir = path.join(__dirname, "spam_cache");
-const logPath = path.join(__dirname, "spam.log");
-
-// ইন-মেমরি ট্র্যাকার্স (মেমরি লিক প্রুফ করার জন্য Map ব্যবহার করা হয়েছে)
-if (!global.spamMsgCache) global.spamMsgCache = new Map();
-if (!global.spamSettings) global.spamSettings = new Map();
-if (!global.spamQueue) global.spamQueue = [];
-if (!global.spamProcessingQueue) global.spamProcessingQueue = false;
-
-// প্রোটেকশন ও কুলডাউন ট্র্যাকার্স
-const userCooldowns = new Map();
-const threadCooldowns = new Map();
-let globalCooldownTime = 0;
-
-const userMsgCount = new Map();
-const threadMsgCount = new Map();
-let globalMsgCount = [];
-
-// রেট লিমিট অ্যাডাপ্টিভ ডিলে
-let rateLimitDelayModifier = 0;
-
-// লগার সিস্টেম
-function logError(errorText) {
-    const time = new Date().toLocaleString();
-    const logMessage = `[${time}] ${errorText}\n`;
-    console.error(`[SPAM ERROR] ${errorText}`);
-    fs.appendFile(logPath, logMessage, () => {});
-}
-
-// স্টার্টআপ ক্লিনার এবং ডিরেক্টরি তৈরি
-try {
-    fs.ensureDirSync(cacheDir);
-    // ২৫. Startup Cleaner: বটের পুরনো টেম্পোরারি ফাইল বুট হওয়ার সময় ডিলিট করা
-    fs.emptyDirSync(cacheDir);
-} catch (e) {
-    logError(`Startup clean fail: ${e.message}`);
-}
-
-// ২০. JSON Protection & ২১. Atomic Save (ফল্ট টলারেন্ট ডাটাবেজ মেকানিজম)
-function loadDatabase() {
-    try {
-        if (fs.existsSync(dbPath)) {
-            const data = fs.readJsonSync(dbPath, { throws: false });
-            if (data) {
-                Object.keys(data).forEach(k => global.spamSettings.set(k, data[k]));
-                return;
-            }
-        }
-        if (fs.existsSync(dbBackupPath)) {
-            const data = fs.readJsonSync(dbBackupPath, { throws: false });
-            if (data) {
-                Object.keys(data).forEach(k => global.spamSettings.set(k, data[k]));
-                fs.writeJsonSync(dbPath, data);
-                return;
-            }
-        }
-    } catch (e) {
-        logError(`Database corrupt, re-creating... Error: ${e.message}`);
-    }
-    fs.writeJsonSync(dbPath, {});
-}
-
-function saveDatabase() {
-    const tempPath = `${dbPath}.tmp`;
-    try {
-        const obj = Object.fromEntries(global.spamSettings);
-        fs.writeJsonSync(tempPath, obj, { spaces: 2 });
-        fs.renameSync(tempPath, dbPath);
-        fs.writeJsonSync(dbBackupPath, obj, { spaces: 2 });
-    } catch (e) {
-        logError(`Atomic save failed: ${e.message}`);
-        if (fs.existsSync(tempPath)) fs.removeSync(tempPath);
-    }
-}
-
-loadDatabase();
-
-// এক্সটেনশন ডিটেক্টর (MIME Type অনুযায়ী সঠিক ফাইল এক্সটেনশন)
-function getExtFromMime(mimeType) {
-    if (!mimeType) return "bin";
-    const map = {
-        "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp",
-        "video/mp4": "mp4", "video/quicktime": "mov", "audio/mpeg": "mp3", "audio/aac": "aac",
-        "audio/ogg": "ogg", "application/pdf": "pdf", "application/zip": "zip", 
-        "application/x-rar-compressed": "rar", "text/plain": "txt", "text/html": "html",
-        "application/json": "json", "application/javascript": "js"
-    };
-    return map[mimeType.toLowerCase()] || mimeType.split("/")[1] || "bin";
-}
-
-// হেভী ডিউটি ১৩. Queue System & ১৪. Dynamic Delay
-async function processQueue() {
-    if (global.spamProcessingQueue || global.spamQueue.length === 0) return;
-    global.spamProcessingQueue = true;
-
-    while (global.spamQueue.length > 0) {
-        const task = global.spamQueue.shift();
-        try {
-            // ২০০-৫০০ms ডাইনামিক ডিলে + রেট লিমিট পেনাল্টি ডিলে
-            const baseDelay = Math.floor(Math.random() * (500 - 200 + 1)) + 200;
-            await new Promise(r => setTimeout(r, baseDelay + rateLimitDelayModifier));
-            await task();
-            if (rateLimitDelayModifier > 0) rateLimitDelayModifier -= 50; // ধীরে ধীরে ডিলে কমানো
-        } catch (err) {
-            logError(`Queue execution error: ${err.message}`);
-        }
-    }
-    global.spamProcessingQueue = false;
-}
+const fs = require("fs");
 
 module.exports = {
-    config: {
-        name: "spam",
-        version: "6.0.0",
-        author: "SIYAM-HASAN",
-        countDown: 0,
-        role: 0, // ৩২. Role 0 সবার জন্য উন্মুক্ত
-        description: "Enterprise Grade Anti-Unsend & Spam Protection",
-        category: "utility",
-        guide: "{pn} on | {pn} off"
-    },
+  config: {
+    name: "gcmanage",
+    aliases: ["gc", "group", "গ্রুপ"],
+    version: "7.0",
+    author: "SIYAM",
+    role: 2, // ওনার/এডমিন অনলি
+    category: "admin",
+    shortDescription: "স্মার্ট গ্রুপ নোটিশ ও প্রফেশনাল লিভ সিস্টেম"
+  },
 
-    // ৩১. Command & Chat trigger Handling
-    onStart: async function ({ message, args, event }) {
-        try {
-            const tID = event.threadID;
-            const input = (args[0] || event.body || "").toLowerCase();
+  onStart: async function ({ message, args, api, event }) {
+    const input = args.join(" ").toLowerCase().trim();
+    global.GoatBot.onReply = global.GoatBot.onReply || new Map();
 
-            if (input.includes("off")) {
-                global.spamSettings.set(tID, false);
-                saveDatabase();
-                return message.reply("❌ 𝗦𝗣𝗔𝗠 𝗦𝗬𝗦𝗧𝗘𝗠 𝗧𝗨𝗥𝗡𝗘𝗗 𝗢𝗙𝗙!");
-            } else if (input.includes("on")) {
-                global.spamSettings.set(tID, true);
-                saveDatabase();
-                return message.reply("✅ 𝗦𝗣𝗔𝗠 𝗦𝗬𝗦𝗧𝗘𝗠 𝗧𝗨𝗥𝗡𝗘𝗗 𝗢𝗡!");
-            } else {
-                return message.reply("💡 ব্যবহার পদ্ধতি:\n» 'spam off' - বন্ধের জন্য\n» 'spam on' - চালুর জন্য");
-            }
-        } catch (e) {
-            logError(`Command error: ${e.message}`);
-        }
-    },
+    if (input === "list" || input === "লিস্ট") {
+      try {
+        const inbox = await api.getThreadList(100, null, ["INBOX"]);
+        const groups = inbox.filter(t => t.isGroup);
+        if (groups.length === 0) return message.reply("⚠️ বটের কোনো একটিভ গ্রুপ চ্যাট পাওয়া যায়নি।");
 
-    onEvent: async function ({ message, event, usersData }) {
-        try {
-            if (!event) return;
-            const tID = event.threadID;
-            const sID = event.senderID;
-            
-            // ১. Messenger Compatibility: সব ধরনের ইউনিক ডিলিট আইডি ডিটেক্ট করা
-            const mID = event.messageID || event.deletedMessageID || (event.messageReply && event.messageReply.messageID);
+        let msg = "✨ 🌐 𝐁𝐎𝐓 𝐀𝐂𝐓𝐈𝐕𝐄 𝐂𝐇𝐀𝐍𝐍𝐄𝐋𝐒 🌐 ✨\n━━━━━━━━━━━━━━━━━━\n", reps = [];
+        groups.forEach((g, i) => {
+          msg += `[ ${i + 1} ] 👥 ${g.name || "Unnamed Group"}\n🆔 𝖨𝖣: ${g.threadID}\n━━━━━━━━━━━━━━━━━━\n`;
+          reps.push({ num: i + 1, id: g.threadID, name: g.name || "Unnamed Group" });
+        });
+        msg += `\n⚡ 𝖦𝖴𝖨𝖣𝖤𝖫𝖨𝖭𝖤:\n» লিভ ও নোটিশ দিতে লিখুন: "out <নাম্বার>"\n» গ্রুপে জয়েন হতে লিখুন: "add <নাম্বার>"\n(এই মেসেজে রিপ্লাই দিন)`;
 
-            // চ্যাটে সাধারণ টেক্সট ডিটেকশন সমর্থন করা
-            if (event.body && (event.body.toLowerCase() === "spam off" || event.body.toLowerCase() === "spam on")) {
-                global.spamSettings.set(tID, event.body.toLowerCase() === "spam on");
-                saveDatabase();
-                return message.reply(event.body.toLowerCase() === "spam on" ? "✅ 𝗦𝗣𝗔𝗠 𝗦𝗬𝗦𝗧𝗘𝗠 𝗧𝗨𝗥𝗡𝗘𝗗 𝗢𝗡!" : "❌ 𝗦𝗣𝗔𝗠 𝗦𝗬𝗦𝗧𝗘𝗠 𝗧𝗨𝗥𝗡𝗘𝗗 𝗢𝗙𝗙!");
-            }
-
-            // ২৯. Auto Enable: ডিফল্টভাবে সব গ্রুপে অন রাখা
-            const isEnabled = global.spamSettings.has(tID) ? global.spamSettings.get(tID) : true;
-            if (!isEnabled) return;
-
-            // চ্যাট ড্যাশবোর্ড ব্যাকআপ (মেসেজ ক্যাশ সংরক্ষণ)
-            if (event.type === "message" || event.type === "message_reply") {
-                const cacheData = {
-                    mID: mID, tID: tID, sID: sID,
-                    body: event.body || "",
-                    mentions: event.mentions || {},
-                    timestamp: Date.now(),
-                    attachments: [],
-                    replyInfo: event.messageReply ? { sID: event.messageReply.senderID, body: event.messageReply.body } : null
-                };
-
-                // ৯. Group ভিত্তিক ৯. Cache Limit (প্রতি গ্রুপে সর্বোচ্চ ১০০০ মেসেজ)
-                let groupCacheKeys = Array.from(global.spamMsgCache.values()).filter(x => x.tID === tID).map(x => x.mID);
-                if (groupCacheKeys.length >= 1000) {
-                    const oldKey = groupCacheKeys[0];
-                    const oldData = global.spamMsgCache.get(oldKey);
-                    if (oldData && oldData.attachments) {
-                        oldData.attachments.forEach(a => fs.remove(a.localPath).catch(() => {}));
-                    }
-                    global.spamMsgCache.delete(oldKey);
-                }
-
-                if (event.attachments && event.attachments.length > 0) {
-                    for (const att of event.attachments) {
-                        // ২৬. Large File Protection (২৫ এমবির বেশি ফাইল ক্যাশ না করা)
-                        if (att.size && att.size > 25 * 1024 * 1024) continue;
-
-                        let ext = getExtFromMime(att.mimeType);
-                        let randName = `att_${crypto.randomBytes(4).toString("hex")}.${ext}`;
-                        let localPath = path.join(cacheDir, randName);
-
-                        const attObj = {
-                            type: att.type ? att.type.toUpperCase() : "FILE",
-                            url: att.url, localPath: localPath,
-                            downloadPromise: null, isDownloaded: false,
-                            size: att.size || 0, ext: ext
-                        };
-
-                        // ৫. Download Race Condition: মেসেজ আসার সাথে সাথে ডাউনলোড শুরু করা
-                        if (att.url) {
-                            attObj.downloadPromise = (async () => {
-                                // ৬. Retry System: ৩ বার রিট্রাই লজিক
-                                for (let r = 1; r <= 3; r++) {
-                                    try {
-                                        const res = await axios({ method: "get", url: att.url, responseType: "stream", timeout: 10000 });
-                                        const writer = fs.createWriteStream(localPath);
-                                        res.data.pipe(writer);
-                                        await new Promise((res, rej) => { writer.on("finish", res); writer.on("error", rej); });
-                                        
-                                        // ৭. Attachment Integrity Check
-                                        if (fs.existsSync(localPath) && fs.statSync(localPath).size > 0) {
-                                            attObj.isDownloaded = true;
-                                            break;
-                                        }
-                                    } catch (err) {
-                                        if (r === 3) logError(`Failed downloading attachment after 3 retries: ${err.message}`);
-                                        await new Promise(resolve => setTimeout(resolve, 1000)); // ১ সেকেন্ড ডিলে
-                                    }
-                                }
-                            })();
-                        }
-                        cacheData.attachments.push(attObj);
-                    }
-                }
-
-                global.spamMsgCache.set(mID, cacheData);
-
-                // ১০. Cache Expire (১ ঘণ্টা পর মেমরি ও লোকাল ড্রাইভ ফাইল ফ্লাশ করা)
-                setTimeout(() => {
-                    const data = global.spamMsgCache.get(mID);
-                    if (data) {
-                        if (data.attachments) data.attachments.forEach(a => fs.remove(a.localPath).catch(() => {}));
-                        global.spamMsgCache.delete(mID);
-                    }
-                }, 60 * 60 * 1000);
-                return;
-            }
-
-            // ডিলিট ইভেন্ট স্ক্যান (সব সম্ভাব্য ভ্যারিয়েন্ট চেক করা)
-            if (event.type === "message_unsend" || event.logMessageType === "message_unsend" || event.action === "message_unsend" || !event.body && mID && global.spamMsgCache.has(mID)) {
-                
-                const savedMsg = global.spamMsgCache.get(mID);
-                if (!savedMsg) return;
-
-                const now = Date.now();
-
-                // 🛑 ৩-স্তরের অ্যাডভান্সড অ্যান্টি-স্প্যাম প্রটেকশন
-                if (now < globalCooldownTime) return;
-                if (threadCooldowns.has(tID) && now < threadCooldowns.get(tID)) return;
-                if (userCooldowns.has(sID) && now < userCooldowns.get(sID)) return;
-
-                // ১৮. Global Cooldown (১০ সেকেন্ডে ১৫+ ডিলিট হলে ৩ মিনিট ব্লক)
-                globalMsgCount.push(now);
-                globalMsgCount = globalMsgCount.filter(t => now - t < 10000);
-                if (globalMsgCount.length > 15) {
-                    globalCooldownTime = now + (3 * 60 * 1000);
-                    return message.reply("🚨 𝗚𝗟𝗢𝗕𝗔𝗟 𝗙𝗟𝗢𝗢𝗗 𝗗𝗘𝗧𝗘𝗖𝗧𝗘𝗗!\nবটের আইডি ও মেমরি সুরক্ষার্থে বৈশ্বিক রিকভারি ৩ মিনিটের জন্য বন্ধ করা হলো।");
-                }
-
-                // ১৭. Thread Cooldown (৫ সেকেন্ডে ৫+ ডিলিট হলে ৩ মিনিট থ্রেড লক)
-                let tCount = threadMsgCount.get(tID) || [];
-                tCount.push(now);
-                tCount = tCount.filter(t => now - t < 5000);
-                threadMsgCount.set(tID, tCount);
-                if (tCount.length > 5) {
-                    threadCooldowns.set(tID, now + (3 * 60 * 1000));
-                    return message.reply("⚠️ 𝗧𝗛𝗥𝗘𝗔𝗗 𝗖𝗢𝗢𝗟𝗗𝗢𝗪𝗡 𝗔𝗖𝗧𝗜𝗩𝗔𝗧𝗘𝗗!\nএই গ্রুপে ফ্লাড ডিটেক্ট হওয়ায় আগামী ৩ মিনিটের জন্য রিকভারি পজ করা হলো।");
-                }
-
-                // ১৬. User Cooldown (৫ সেকেন্ডে ৩+ ডিলিট হলে ৩ মিনিট ইউজার লক)
-                let uCount = userMsgCount.get(sID) || [];
-                uCount.push(now);
-                uCount = uCount.filter(t => now - t < 5000);
-                userMsgCount.set(sID, uCount);
-                if (uCount.length > 3) {
-                    userCooldowns.set(sID, now + (3 * 60 * 1000));
-                    return message.reply(`🛑 𝗨𝗦𝗘𝗥 𝗕𝗟𝗢𝗖𝗞𝗘𝗗!\nঅতিরিক্ত মেসেজ আনসেন্ড করার জন্য আপনাকে ৩ মিনিটের জন্য ব্লক করা হলো।`);
-                }
-
-                // ১২. Duplicate Protection (একই মেসেজ সেকেন্ড টাইম প্রোসেস হবে না)
-                global.spamMsgCache.delete(mID);
-
-                // কিউ টাস্ক পুশ (Sequential Processing)
-                global.spamQueue.push(async () => {
-                    try {
-                        const name = await usersData.getNameUser(savedMsg.sID) || "Facebook User";
-                        let mainAtt = savedMsg.attachments.length > 0 ? savedMsg.attachments[0].type : "TEXT";
-
-                        // ৩৩. Message Design & ৩৪. Footer
-                        let recoveryMsg = `╭━━━━━━━━━━━━━━╮\n🚨 𝗦𝗣𝗔𝗠 𝗕𝗟𝗢𝗖𝗞𝗘𝗗\n╰━━━━━━━━━━━━━━╯\n👤 USER : ${name}\n🗑️ Deleted : ${mainAtt}\n📩 Restored Successfully\n😏 ভাবছস ডিলিট দিলে বাঁচবি?\nআমি থাকতে তোর msg গায়েব হবে না!\nপি্ঁচ্চি্ঁ রি্ঁদ্ঁয়্ঁ ত্যা্ঁহ্ঁ.alllist\n💬 Type "spam off" to disable in this group.\n👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝗔𝗡 👑`;
-
-                        if (savedMsg.body) {
-                            recoveryMsg += `\n\n📝 CONTENT:\n${savedMsg.body}`;
-                        }
-                        if (savedMsg.replyInfo) {
-                            recoveryMsg += `\n\n↩️ REPLIED TO:\n👤 Sender: ${savedMsg.replyInfo.sID}\n💬 Msg: ${savedMsg.replyInfo.body || "[Media Attachment]"}`;
-                        }
-
-                        const payload = { body: recoveryMsg, attachment: [] };
-
-                        if (savedMsg.attachments && savedMsg.attachments.length > 0) {
-                            // রেট লিমিট অ্যাডাপ্টিভ ডিলে মডিফায়ার আপডেট
-                            rateLimitDelayModifier += (savedMsg.attachments.length * 150);
-
-                            for (const att of savedMsg.attachments) {
-                                // যদি ডাউনলোড প্রমিস এখনো চলমান থাকে তবে অপেক্ষা করা (Download Race Condition ফিক্স)
-                                if (att.downloadPromise) await att.downloadPromise;
-
-                                if (att.isDownloaded && fs.existsSync(att.localPath)) {
-                                    payload.attachment.push(fs.createReadStream(att.localPath));
-                                } else if (att.url) {
-                                    // ২৭. Attachment Fallback (লোকাল ফাইল করাপ্ট হলে অরিজিনাল ইউআরএল স্ট্রিম করা)
-                                    try {
-                                        payload.attachment.push(await global.utils.getStreamFromURL(att.url));
-                                    } catch (e) {
-                                        logError(`Fallback stream fail: ${e.message}`);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (payload.attachment.length === 0) delete payload.attachment;
-
-                        // ফেসবুক সার্ভারে রেসপন্স সেন্ড করা
-                        await message.reply(payload);
-
-                        // ২৪. Temporary File Cleaner: রেস্টোর কমপ্লিট হলে সাথে সাথে ফাইল ডিলিট
-                        if (savedMsg.attachments) {
-                            savedMsg.attachments.forEach(a => fs.remove(a.localPath).catch(() => {}));
-                        }
-
-                    } catch (err) {
-                        logError(`Critical restore failure: ${err.message}`);
-                        // ১৫. Adaptive Rate Limit (ফেসবুক রেট লিমিট ধরলে অটো ডিলে ৩০০০০ms বাড়িয়ে দেবে)
-                        if (err.message && err.message.includes("429")) {
-                            rateLimitDelayModifier += 30000;
-                        }
-                    }
-                });
-
-                // কিউ প্রসেসর ট্রিগার করা
-                processQueue();
-            }
-        } catch (error) {
-            logError(`Critical event failure: ${error.message}`);
-        }
+        return message.reply(msg, (e, info) => {
+          if (!e) {
+            global.GoatBot.onReply.set(info.messageID, { 
+              commandName: "gcmanage", 
+              author: event.senderID, 
+              data: reps,
+              msgIds: [info.messageID, event.messageID] // ইনিশিয়াল মেসেজ এবং ইউজারের কমান্ড ট্র্যাক
+            });
+          }
+        });
+      } catch (e) { return message.reply("❌ এরর: " + e.message); }
     }
+    return message.reply("💡 ব্যবহার করতে লিখুন: gc list অথবা gc লিস্ট");
+  },
+
+  onReply: async function ({ message, Reply, event, api }) {
+    if (event.senderID !== Reply.author) return;
+    const text = event.body.trim().toLowerCase();
+    const cmdChannel = event.threadID;
+
+    // আগের জমানো মেসেজ আইডি রিকভার করা বা নতুন অ্যারে নেওয়া
+    let trackedIds = Reply.msgIds || [];
+    trackedIds.push(event.messageID); // বর্তমান ইউজারের রিপ্লাই আইডি পুশ করা হলো
+
+    // গ্লোবাল ডিলিট ফাংশন (যেকোনো স্টেজে সব জমানো মেসেজ এক ক্লিকে রিমুভ করবে)
+    const cleanupMessages = async (idsArray) => {
+      if (idsArray && idsArray.length > 0) {
+        // ডুপ্লিকেট আইডি রিমুভ করা
+        const uniqueIds = [...new Set(idsArray)];
+        for (const id of uniqueIds) {
+          try { await api.unsendMessage(id); } catch(e){}
+        }
+      }
+    };
+
+    // ================= [ ADD FEATURE ] =================
+    if (text.startsWith("add")) {
+      const num = parseInt(text.replace("add", "").trim());
+      if (isNaN(num)) return message.reply("❌ অনুগ্রহ করে সঠিক নাম্বার টাইপ করুন। (উদা: add 1)");
+
+      const target = Reply.data.find(g => g.num === num);
+      if (!target) return message.reply("❌ এই নাম্বারের কোনো গ্রুপ খুঁজে পাওয়া যায়নি।");
+
+      try {
+        await api.addUserToGroup(event.senderID, target.id);
+        message.reply(`✅ আপনাকে সফলভাবে "${target.name}" গ্রুপে যুক্ত করা হয়েছে।`);
+        await cleanupMessages(trackedIds);
+      } catch (err) {
+        return message.reply(`❌ গ্রুপে অ্যাড করা যায়নি। হতে পারে গ্রুপের মেম্বার ফুল বা বটের পারমিশন নেই।`);
+      }
+      return;
+    }
+
+    // ================= [ OUT FEATURE ] =================
+    if (text.startsWith("out")) {
+      const num = parseInt(text.replace("out", "").trim());
+      if (isNaN(num)) return message.reply("❌ অনুগ্রহ করে সঠিক নাম্বার টাইপ করুন। (উদা: out 1)");
+
+      // এখানে অবজেক্ট ক্লোনিং করে টার্গেটের ডেটা সুরক্ষিত করা হয়েছে
+      const target = Reply.data.find(g => g.num === num);
+      if (!target) return message.reply("❌ এই নাম্বারের কোনো গ্রুপ খুঁজে পাওয়া যায়নি।");
+      
+      try {
+        const currentThread = await api.getThreadInfo(cmdChannel);
+        const currentName = currentThread.threadName || "Админ Снαииєℓ";
+        const targetName = target.name;
+        const targetId = target.id;
+
+        // নোটিশ প্রসেসিং মেসেজ পাঠানো এবং সেটির আইডিও ট্র্যাকিং লিস্টে রাখা
+        api.sendMessage(`⏳ 𝖯𝗋𝗈𝖼𝖾𝗌𝗌𝗂𝗇𝗀... "${targetName}" গ্রুপে মডার্ন নোটিশ পাঠানো হচ্ছে।`, cmdChannel, async (err, procInfo) => {
+          if (!err) trackedIds.push(procInfo.messageID);
+        });
+
+        // ১ নম্বর নোটিশ (টার্গেট গ্রুপে)
+        const noticeMsg = `╭─────── 🪐 ───────╮\n│   ⚠️ 𝐎𝐅𝐅𝐈𝐂𝐈𝐀𝐋 𝐍𝐎𝐓𝐈𝐂𝐄 ⚠️   \n╰───────────────────╯\n` +
+          `  আসসালামু আলাইকুম।\n\n` +
+          `📢 এই গ্রুপটিকে (${targetName}) আগামী ২ মিনিটের মধ্যে ব্যান করা হচ্ছে।\n\n` +
+          `📌 𝖢𝗈𝗆𝗆𝖺𝗇𝖽 𝖲𝗈𝗎𝗋𝖼𝖾:\n` +
+          `💬 এই নোটিশটি সরাসরি "${currentName}" গ্রুপ থেকে ওনার দ্বারা ইস্যু করা হয়েছে।\n\n` +
+          `📞 যদি আপনাদের এই বটটি পুনরায় ব্যবহার করার প্রয়োজন হয়, তবে অবিলম্বে নিচে দেওয়া অফিশিয়াল নাম্বারে যোগাযোগ করুন:\n` +
+          `━━━━━━━━━━━━━━━━━\n` +
+          `☎️ 𝖮𝖥𝖥𝖨𝖢𝖨𝖠𝖫: 01789138157\n` +
+          `━━━━━━━━━━━━━━━━━━━\n` +
+          `✨ Powered by SIYAM-BOS ✨`;
+        
+        await api.sendMessage(noticeMsg, targetId);
+
+        // ওনারের গ্রুপে পারমিশন মেসেজ পাঠানো
+        const askMsg = `🔔 সিয়াম বস লিভ নেব?\n\n` +
+          `👉 টার্গেট গ্রুপ: "${targetName}"\n` +
+          `👉 লিভ কনফার্ম করতে রিপ্লাই দিন: "ass"\n` +
+          `👉 বাতিল করতে রিপ্লাই দিন: "no"\n\n` +
+          `⏳ সময়সীমা: ২ মিনিট (১২০ সেকেন্ড)`;
+
+        // আগের ইভেন্ট ডিলিট করে নতুন চেইনে সম্পূর্ণ ডেটা ট্রান্সফার
+        global.GoatBot.onReply.delete(event.messageReply.messageID);
+
+        api.sendMessage(askMsg, cmdChannel, (err, info) => {
+          if (!err) {
+            trackedIds.push(info.messageID); // এই পারমিশন মেসেজ আইডিও পুশ হলো
+            
+            global.GoatBot.onReply.set(info.messageID, {
+              commandName: "gcmanage",
+              author: Reply.author,
+              action: "confirm_leave",
+              msgIds: trackedIds, // আগের সব আইডি এখানে পাস হলো
+              targetName: targetName,
+              targetId: targetId,
+              currentName: currentName
+            });
+
+            // ২ মিনিট টাইমআউট হ্যান্ডেলার
+            setTimeout(() => {
+              if (global.GoatBot.onReply.has(info.messageID)) {
+                global.GoatBot.onReply.delete(info.messageID);
+                api.sendMessage(`⏱️ ২ মিনিট পার হয়ে গেছে! কোনো রেসপন্স না পাওয়ায় অপারেশন বাতিল করা হলো।`, cmdChannel);
+              }
+            }, 120000);
+          }
+        });
+
+      } catch (e) {
+        return message.reply(`❌ অপারেশন ব্যর্থ! টার্গেট গ্রুপে মেসেজ ব্লক অথবা বটকে মিউট করা হয়েছে।`);
+      }
+      return;
+    }
+
+    // ================= [ CONFIRMATION HANDLER ] =================
+    if (Reply.action === "confirm_leave") {
+      const targetName = Reply.targetName;
+      const targetId = Reply.targetId;
+      const currentName = Reply.currentName;
+
+      // যদি ওনার "ass" লেখে (লিভ কনফার্ম)
+      if (text === "ass") {
+        // লোডিং মেসেজ পাঠানো এবং ট্র্যাকিং লিস্টে এড করা
+        api.sendMessage(`⏳ 𝖫𝗈𝖺𝖽𝗂𝗇𝗀... লিভ প্রসেসটি চূড়ান্ত করা হচ্ছে। অনুগ্রহ করে অপেক্ষা করুন...`, cmdChannel, async (err, loadInfo) => {
+          if (!err) trackedIds.push(loadInfo.messageID);
+        });
+        
+        global.GoatBot.onReply.delete(event.messageReply.messageID); // ডুপ্লিকেট রোধ
+
+        // টার্গেট গ্রুপে বিদায় মেসেজ
+        try {
+          const leaveMsg = `╭───────────────────╮\n` +
+            `  🚨 𝐒𝐘𝐒𝐓𝐄𝐌 𝐋𝐄𝐀𝐕𝐈𝐍𝐆...   \n` +
+            `╰───────────────────╯\n` +
+            `👋 আবে এই গ্রুপ থেকে লিভ নিলাম!\n` +
+            `👑 সিয়াম বস সরাসরি "${targetName}" গ্রুপটিকে ব্যান লিস্টিং করেছেন।\n\n` +
+            `🎈 আমাদের সার্ভিসটি উপভোগ করার জন্য ধন্যবাদ। 𝖦𝗈𝗈𝖽𝖻𝗒𝖾!`;
+          
+          await api.sendMessage(leaveMsg, targetId);
+
+          // ৫ সেকেন্ড পর লিভ ও ফাইনাল ক্লিনআপ
+          setTimeout(async () => {
+            try {
+              await api.removeUserFromGroup(api.getCurrentUserID(), targetId);
+              
+              const successMsg = `✅ 𝗧𝗔𝗦𝗞 𝗖𝗢𝗠𝗣𝗟𝗘𝗧𝗘𝗗 💲
+──────────────────
+🚀 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝗘𝘅𝗲𝗰𝘂𝘁𝗲𝗱!
+
+🎯 𝗧𝗮𝗿𝗴𝗲𝘁 𝗚𝗿𝗼𝘂𝗽 : "${targetName}"
+📡 𝗦𝗲𝗻𝗱 𝗚𝗿𝗼𝘂𝗽 : "${currentName}"
+
+📊 স্ট্যাটাস: বট সফলভাবে লিভ নিয়েছে এবং
+আগের সব মেসেজ রিমুভ করা হচ্ছে..⏳
+
+──────────────────
+👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑`;
+              
+              await api.sendMessage(successMsg, cmdChannel);
+              
+              // এইবার সব লোডিং মেসেজসহ আগের সব মেসেজ একবারে ভ্যানিশ হবে
+              await cleanupMessages(trackedIds);
+
+            } catch (err) {
+              return api.sendMessage(`❌ "${targetName}" থেকে লিভ নিতে সমস্যা হয়েছে বা বট অলরেডি রিমুভড।`, cmdChannel);
+            }
+          }, 5000);
+
+        } catch (err) {
+          return api.sendMessage(`❌ "${targetName}" গ্রুপে বিদায় মেসেজ পাঠানো যায়নি।`, cmdChannel);
+        }
+      } 
+      // যদি ওনার "no" লেখে (লিভ বাতিল)
+      else if (text === "no") {
+        global.GoatBot.onReply.delete(event.messageReply.messageID);
+
+        try {
+          // টার্গেট গ্রুপে মেসেজ পাঠানো
+          await api.sendMessage(`❌ সিয়াম বস এই গ্রুপ থেকে বটের লিভ নিতে নিষেধ করেছেন। আপনাদের গ্রুপটি আনবেন আছে।`, targetId);
+          
+          // মূল গ্রুপে মেসেজ
+          await api.sendMessage(`❌ বস লিভ নিতে নিষেধ করছে! অপারেশন বাতিল করা হলো..⏳।`, cmdChannel);
+          
+          // প্রসেস বাতিল হলেও সব ফালতু মেসেজ ক্লিনআপ হবে
+          await cleanupMessages(trackedIds);
+
+        } catch (e) {
+          return api.sendMessage(`❌ প্রসেস বাতিল করার সময় কিছু সমস্যা হয়েছে।`, cmdChannel);
+        }
+      } else {
+        return message.reply(`❌ ভুল অপশন! অনুগ্রহ করে সঠিক গাইডলাইন মেনে শুধু "ass" অথবা "no" লিখে রিপ্লাই দিন।`);
+      }
+    }
+  }
 };
