@@ -6,7 +6,7 @@ module.exports = {
   config: {
     name: "wish",
     version: "2.0",
-    author: "MR_FARHAN",
+    author: "MR_siyam",
     role: 0,
     shortDescription: "Beautiful happy birthday wish",
     longDescription: "Generate a premium style birthday wish card with avatar",
@@ -35,12 +35,22 @@ module.exports = {
     });
   },
 
-  onStart: async function ({ api, event, usersData }) {
+  onStart: async function ({ api, event, args, usersData }) {
     try {
       const bgPath = __dirname + "/cache/bgc.png";
       const avtPath = __dirname + "/cache/avt.png";
 
-      const mentionID = Object.keys(event.mentions)[0] || event.senderID;
+      // মেনশন, মেসেজ রিপ্লাই অথবা সরাসরি UID চেক করার লজিক
+      let mentionID;
+      if (Object.keys(event.mentions).length > 0) {
+        mentionID = Object.keys(event.mentions)[0];
+      } else if (event.type === "message_reply") {
+        mentionID = event.messageReply.senderID;
+      } else if (args[0] && !isNaN(args[0])) {
+        mentionID = args[0];
+      } else {
+        mentionID = event.senderID;
+      }
 
       const targetName = await usersData.getName(mentionID);
       const senderName = await usersData.getName(event.senderID);
@@ -102,7 +112,7 @@ module.exports = {
 
 ◈ তোমার প্রতিটি স্বপ্ন পূরণ হোক।
 ◈ জীবন ভরে উঠুক সুখ, শান্তি ও সফলতায়।
-◈ প্রতিটি নতুন দিন বয়ে আনুক আনন্দ ও আশীর্বাদ।
+◈ প্রতিটি নতুন দিন বয়ে আনুক আনন্দ ও आशीर्वाद।
 
 🤲 আল্লাহ তোমাকে সুস্থতা, দীর্ঘ নেক হায়াত,
 হালাল রিজিক ও সুন্দর ভবিষ্যৎ দান করুন। আমীন।
