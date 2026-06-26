@@ -39,14 +39,14 @@ async function fetchWithFallback(urlBuilder) {
 module.exports = {
   config: {
     name: "ytb",
-    aliases: ["youtube", "yt"],
-    version: "2.2",
+    aliases: ["youtube", "yt", "ytb2"], // ytb2 কে অ্যালাইয়াস হিসেবে যোগ করা হলো
+    version: "2.3",
     author: "Siyam Hasan",
     countDown: 6,
     role: 0,
     description: {
-      bn: "YouTube ভিডিও সার্চ ও ডাউনলোড",
-      en: "YouTube search & download system"
+      bn: "YouTube ভিডিও সার্চ ও ডাউনলোড (ytb থাম্বনেইল সহ, ytb2 থাম্বনেইল ছাড়া)",
+      en: "YouTube search & download system (ytb with thumbnail, ytb2 without thumbnail)"
     },
     category: "media"
   },
@@ -54,8 +54,8 @@ module.exports = {
   langs: {
     bn: {
       error: "❌ সমস্যা: %1",
-      noResult: "⭕ কিছু পাওয়া যায়নি: %1",
-      choose: "📌 নাম্বার দিয়ে রিপ্লাই করো:\n\n%1",
+      noResult: "⭕ কিছু পাওয়া যায়নি: %1",
+      choose: "📌 নাম্বার দিয়ে রিপ্লাই করো:\n\n%1",
       downloading: "⬇️ ডাউনলোড হচ্ছে: %1 - %2"
     }
   },
@@ -65,8 +65,12 @@ module.exports = {
     const input = args.join(" ").trim();
 
     if (!input) {
-      return api.sendMessage("👉 ব্যবহার: ytb song name", threadID, messageID);
+      return api.sendMessage("👉 ব্যবহার: ytb song name অথবা ytb2 song name", threadID, messageID);
     }
+
+    // ইউজার কোন কমান্ডটি ব্যবহার করেছে তা চেক করার লজিক
+    const usedCommand = event.body.split(" ")[0].toLowerCase();
+    const isYtb2 = usedCommand.includes("ytb2");
 
     try {
       api.setMessageReaction("🔎", messageID, () => {}, true);
@@ -87,38 +91,40 @@ module.exports = {
       let msg = "";
       let attachments = [];
 
-      // ⚡ FAST THUMBNAIL LOAD (parallel)
-      const thumbs = await Promise.all(
-        results.map(async (r, i) => {
-          try {
-            const thumbPath = path.join(
-              cacheDir,
-              `thumb_${senderID}_${Date.now()}_${i}.jpg`
-            );
+      // যদি ytb2 কমান্ড ব্যবহার করা হয়, তবে থাম্বনেইল ডাউনলোড স্কিপ করবে (ফাস্ট লোড)
+      if (!isYtb2) {
+        // ⚡ FAST THUMBNAIL LOAD (parallel)
+        const thumbs = await Promise.all(
+          results.map(async (r, i) => {
+            try {
+              const thumbPath = path.join(
+                cacheDir,
+                `thumb_${senderID}_${Date.now()}_${i}.jpg`
+              );
 
-            const res = await axios.get(r.thumbnail, {
-              responseType: "arraybuffer",
-              timeout: 10000
-            });
+              const res = await axios.get(r.thumbnail, {
+                responseType: "arraybuffer",
+                timeout: 10000
+              });
 
-            fs.writeFileSync(thumbPath, Buffer.from(res.data));
-            return fs.createReadStream(thumbPath);
-          } catch {
-            return null;
-          }
-        })
-      );
+              fs.writeFileSync(thumbPath, Buffer.from(res.data));
+              return fs.createReadStream(thumbPath);
+            } catch {
+              return null;
+            }
+          })
+        );
+        attachments = thumbs.filter(Boolean);
+      }
 
       results.forEach((r, i) => {
         msg += `${i + 1}. ${r.title}\n⏱ ${r.time}\n\n`;
       });
 
-      attachments = thumbs.filter(Boolean);
-
       return api.sendMessage(
         {
           body:
-`📌 নাম্বার দিয়ে রিপ্লাই করো:
+`📌 নাম্বার দিয়ে রিপ্লাই করো:
 
 ${msg}`,
           attachment: attachments.length ? attachments : undefined
@@ -182,7 +188,7 @@ ${msg}`,
       writer.on("finish", () => {
         api.sendMessage(
           {
-            body: `👑𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 🪄 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑 \n${title}`,
+            body: `👑𝗕𝗢𝗧 𝗢𝗪𝗡Ｅ𝗥 🪄 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑 \n${title}`,
             attachment: fs.createReadStream(filePath)
           },
           event.threadID,
