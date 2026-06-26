@@ -36,17 +36,65 @@ async function fetchWithFallback(urlBuilder) {
   throw new Error("All APIs failed");
 }
 
+// ভিডিও সরাসরি ডাউনলোড করার জন্য একটি হেল্পার ফাংশন
+async function downloadAndSendVideo({ videoID, title, api, threadID, messageID }) {
+  const data = await fetchWithFallback((base) =>
+    `${base}/api/ytb/get?id=${videoID}&type=video`
+  );
+
+  const downloadLink = data?.data?.downloadLink;
+  const videoTitle = data?.data?.title || title;
+
+  if (!downloadLink) throw new Error("Download link not found");
+
+  const cacheDir = path.join(__dirname, "cache");
+  fs.ensureDirSync(cacheDir);
+  const filePath = path.join(cacheDir, `yt_${Date.now()}.mp4`);
+
+  const response = await axios({
+    url: downloadLink,
+    method: "GET",
+    responseType: "stream",
+    timeout: 30000 // বড় ফাইলের জন্য টাইমআউট বাড়ানো হলো
+  });
+
+  const writer = fs.createWriteStream(filePath);
+  response.data.pipe(writer);
+
+  return new Promise((resolve, reject) => {
+    writer.on("finish", () => {
+      api.sendMessage(
+        {
+          body: `👑𝗕𝗢𝗧 𝗢𝗪𝗡ＥＲ 🪄 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑 \n${videoTitle}`,
+          attachment: fs.createReadStream(filePath)
+        },
+        threadID,
+        () => {
+          try { fs.unlinkSync(filePath); } catch {}
+          resolve();
+        },
+        messageID
+      );
+    });
+
+    writer.on("error", (err) => {
+      try { fs.unlinkSync(filePath); } catch {}
+      reject(err);
+    });
+  });
+}
+
 module.exports = {
   config: {
     name: "ytb",
-    aliases: ["youtube", "yt", "ytb2"], // ytb2 কে অ্যালাইয়াস হিসেবে যোগ করা হলো
-    version: "2.3",
+    aliases: ["youtube", "yt", "ytb2", "ভিডিও", "ভিডিও দাও", "video", "video দাও"], 
+    version: "2.5",
     author: "Siyam Hasan",
     countDown: 6,
     role: 0,
     description: {
-      bn: "YouTube ভিডিও সার্চ ও ডাউনলোড (ytb থাম্বনেইল সহ, ytb2 থাম্বনেইল ছাড়া)",
-      en: "YouTube search & download system (ytb with thumbnail, ytb2 without thumbnail)"
+      bn: "YouTube ভিডিও সার্চ ও ডাউনলোড (সরাসরি ভিডিও বা মেনু সিস্টেম)",
+      en: "YouTube search & download system (Direct video or menu system)"
     },
     category: "media"
   },
@@ -62,13 +110,25 @@ module.exports = {
 
   onStart: async function ({ api, args, event, getLang }) {
     const { threadID, messageID, senderID } = event;
-    const input = args.join(" ").trim();
+    let input = args.join(" ").trim();
 
-    if (!input) {
-      return api.sendMessage("👉 ব্যবহার: ytb song name অথবা ytb2 song name", threadID, messageID);
+    // ইউজার কোন কি-ওয়ার্ড দিয়ে কমান্ড ট্রিগার করেছে তা বের করা
+    const bodyText = event.body.toLowerCase();
+    
+    // ভিডিও দাও / ভিডিও দে / ভিডিও / video ইত্যাদি ম্যাচ করার কাস্টম লজিক
+    const directDownloadPattern = /^(ভিডিও\s*দাও|ভিডিও\s*দে|ভিডিও|video\s*daw|video\s*de|video)\s*(.*)/i;
+    const match = bodyText.match(directDownloadPattern);
+
+    let isDirect = false;
+    if (match) {
+      isDirect = true;
+      input = match[2].trim(); // কি-ওয়ার্ড বাদে শুধু গানের নামটুকু আলাদা করা হলো
     }
 
-    // ইউজার কোন কমান্ডটি ব্যবহার করেছে তা চেক করার লজিক
+    if (!input) {
+      return api.sendMessage("👉 ব্যবহার: ytb song name অথবা ভিডিও [গানের নাম]", threadID, messageID);
+    }
+
     const usedCommand = event.body.split(" ")[0].toLowerCase();
     const isYtb2 = usedCommand.includes("ytb2");
 
@@ -85,15 +145,41 @@ module.exports = {
         return api.sendMessage(getLang("noResult", input), threadID, messageID);
       }
 
+      // 🚀 সরাসরি ডাউনলোড মোড (যদি ইউজার "ভিডিও দাও/দে" বলে থাকে)
+      if (isDirect) {
+        const firstVideo = results[0];
+        // লোডিং মেসেজ পাঠানো হচ্ছে
+        const loadingMsg = await new Promise((resolve) => {
+          api.sendMessage(`📥 "${firstVideo.title}" ভিডিওটি ডাউনলোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।`, threadID, (err, info) => resolve(info), messageID);
+        });
+
+        try {
+          api.setMessageReaction("⬇️", messageID, () => {}, true);
+          await downloadAndSendVideo({
+            videoID: firstVideo.id,
+            title: firstVideo.title,
+            api,
+            threadID,
+            messageID
+          });
+          
+          // সফলভাবে ডাউনলোড হলে লোডিং মেসেজটি আনসেন্ড করে দেওয়া হবে
+          if (loadingMsg?.messageID) api.unsendMessage(loadingMsg.messageID);
+        } catch (downloadError) {
+          if (loadingMsg?.messageID) api.unsendMessage(loadingMsg.messageID);
+          return api.sendMessage(`❌ সরাসরি ডাউনলোড ব্যর্থ হয়েছে: ${downloadError.message}`, threadID, messageID);
+        }
+        return;
+      }
+
+      // 📋 আগের মতো সাধারণ মেনু মোড (ytb / ytb2 এর জন্য)
       const cacheDir = path.join(__dirname, "cache");
       fs.ensureDirSync(cacheDir);
 
       let msg = "";
       let attachments = [];
 
-      // যদি ytb2 কমান্ড ব্যবহার করা হয়, তবে থাম্বনেইল ডাউনলোড স্কিপ করবে (ফাস্ট লোড)
       if (!isYtb2) {
-        // ⚡ FAST THUMBNAIL LOAD (parallel)
         const thumbs = await Promise.all(
           results.map(async (r, i) => {
             try {
@@ -123,10 +209,7 @@ module.exports = {
 
       return api.sendMessage(
         {
-          body:
-`📌 নাম্বার দিয়ে রিপ্লাই করো:
-
-${msg}`,
+          body: `📌 নাম্বার দিয়ে রিপ্লাই করো:\n\n${msg}`,
           attachment: attachments.length ? attachments : undefined
         },
         threadID,
@@ -154,51 +237,22 @@ ${msg}`,
     const choice = parseInt(event.body);
     if (!choice || choice < 1 || choice > results.length) return;
 
-    const videoID = results[choice - 1].id;
+    const selectedVideo = results[choice - 1];
 
     try {
       api.setMessageReaction("⬇️", event.messageID, () => {}, true);
 
-      // 🧹 DELETE MENU MESSAGE AFTER CHOICE
       try {
         if (menuMsgID) api.unsendMessage(menuMsgID);
       } catch {}
 
-      const data = await fetchWithFallback((base) =>
-        `${base}/api/ytb/get?id=${videoID}&type=video`
-      );
-
-      const downloadLink = data?.data?.downloadLink;
-      const title = data?.data?.title;
-
-      if (!downloadLink) throw new Error("Download link not found");
-
-      const filePath = path.join(__dirname, "cache", `yt_${Date.now()}.mp4`);
-
-      const response = await axios({
-        url: downloadLink,
-        method: "GET",
-        responseType: "stream",
-        timeout: 20000
-      });
-
-      const writer = fs.createWriteStream(filePath);
-      response.data.pipe(writer);
-
-      writer.on("finish", () => {
-        api.sendMessage(
-          {
-            body: `👑𝗕𝗢𝗧 𝗢𝗪𝗡Ｅ𝗥 🪄 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑 \n${title}`,
-            attachment: fs.createReadStream(filePath)
-          },
-          event.threadID,
-          () => fs.unlinkSync(filePath),
-          event.messageID
-        );
-      });
-
-      writer.on("error", () => {
-        api.sendMessage("❌ ডাউনলোড ব্যর্থ হয়েছে", event.threadID);
+      // মেনু থেকে সিলেক্ট করার পরও হেল্পার ফাংশন দিয়ে ভিডিও পাঠানো হচ্ছে
+      await downloadAndSendVideo({
+        videoID: selectedVideo.id,
+        title: selectedVideo.title,
+        api,
+        threadID: event.threadID,
+        messageID: event.messageID
       });
 
     } catch (e) {
