@@ -1,7 +1,7 @@
 module.exports = {
 
   config: {
-    name: "allgroup2",
+    name: "allgroup",
     aliases: ["allgc"],
     version: "2.0",
     role: 2,
