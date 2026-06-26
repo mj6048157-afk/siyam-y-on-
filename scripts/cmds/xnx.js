@@ -12,14 +12,15 @@ async function getStream(url) {
 module.exports = {
   config: {
     name: "xnx",
-    version: "0.0.1",
+    aliases: ["xnx2"], // xnx2 কে এখানে অ্যালাইয়াস হিসেবে যুক্ত করা হলো
+    version: "0.0.2",
     author: "ariyan fixed by Milon Pro",
     countDown: 5,
     role: 0,
     shortDescription: { en: "Search and download videos" },
-    description: { en: "Search and download videos via reply" },
+    description: { en: "Search and download videos via reply (xnx with thumbnail, xnx2 without thumbnail)" },
     category: "media",
-    guide: { en: "{pn} <keyword>" }
+    guide: { en: "{pn} <keyword> or {p}xnx2 <keyword>" }
   },
 
   onStart: async function ({ api, args, message, event, commandName }) {
@@ -36,7 +37,11 @@ module.exports = {
     }
 
     const query = args.join(" ");
-    if (!query) return api.sendMessage("⚠️ | Usage: xnx <keyword>", event.threadID, event.messageID);
+    if (!query) return api.sendMessage("⚠️ | Usage: xnx <keyword> or xnx2 <keyword>", event.threadID, event.messageID);
+
+    // ইউজার কোন কমান্ডটি ব্যবহার করেছে তা চেক করার লজিক
+    const usedCommand = event.body.split(" ")[0].toLowerCase();
+    const isXnx2 = usedCommand.includes("xnx2");
 
     api.setMessageReaction("⏳", event.messageID, () => {}, true);
 
@@ -57,7 +62,8 @@ module.exports = {
         const v = limitedResults[i];
         msg += `${i + 1}. ${v.title}\n⏱ ${v.duration || 'N/A'} | 👀 ${v.views || 'N/A'}\n\n`;
         
-        if (v.thumbnail) {
+        // যদি xnx2 ব্যবহার করা হয় তবে থাম্বনেইল স্ট্রিম নেওয়া স্কিপ করবে
+        if (!isXnx2 && v.thumbnail) {
           try {
             thumbnails.push(await getStream(v.thumbnail));
           } catch (e) {}
@@ -69,7 +75,7 @@ module.exports = {
       return api.sendMessage(
         {
           body: msg + "📝 | Reply with a number (1-6) to download.\n🖌️ Created by: " + creatorName,
-          attachment: thumbnails
+          attachment: thumbnails.length ? thumbnails : undefined
         },
         event.threadID,
         (err, info) => {
@@ -77,7 +83,7 @@ module.exports = {
             results: limitedResults,
             messageID: info.messageID,
             author: event.senderID,
-            commandName: commandName,
+            commandName: this.config.name, // মূল কমান্ড ট্র্যাকিং এর জন্য ফিক্সড
             base
           });
         },
