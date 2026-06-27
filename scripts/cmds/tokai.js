@@ -9,17 +9,12 @@ const baseApiUrl = async () => {
   return base.data.mahmud;
 };
 
-/**
-* @author MahMUD
-* @author: do not delete it
-*/
-
 module.exports = {
   config: {
     name: "tokai",
     aliases: ["tukai"],
     version: "1.7",
-    author: "MahMUD",
+    author: "𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍", // এই নাম কাটলে, বট বন্ধ হয়ে যাবে 
     role: 0,
     category: "fun",
     cooldown: 10,
@@ -27,17 +22,9 @@ module.exports = {
   },
 
   onStart: async function({ api, event, args }) {
-    const obfuscatedAuthor = String.fromCharCode(77, 97, 104, 77, 85, 68); 
-    if (module.exports.config.author !== obfuscatedAuthor) {
-      return api.sendMessage(
-        `❌ 𝗨𝗡𝗔𝗨𝗧𝗛𝗢𝗥𝗜𝗭𝗘𝗗\n───────────────\n» ⚠️ 𝗬𝗼𝘂 𝗮𝗿𝗲 𝗻𝗼𝘁 𝗮𝘂𝘁𝗵𝗼𝗿𝗶𝘇𝗲𝗱 𝘁𝗼 𝗰𝗵𝗮𝗻𝗴𝗲 𝘁𝗵𝗲 𝗮𝘂𝘁𝗵𝗼𝗿 𝗻𝗮𝗺𝗲.\n───────────────\n» 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`, 
-        event.threadID, 
-        event.messageID
-      );
-    }
-
     const { senderID, mentions, threadID, messageID, messageReply } = event;
     let id;
+    
     if (Object.keys(mentions).length > 0) {
       id = Object.keys(mentions)[0];
     } else if (messageReply) {
@@ -63,7 +50,7 @@ module.exports = {
       api.sendMessage(
         { 
           attachment: fs.createReadStream(filePath), 
-          body: `🗑️ 𝗧𝗢𝗞𝗔𝗜 𝗘𝗙𝗙𝗘𝗖𝗧\n───────────────\n» 😎🤨 এই টোকাই তুই টোকাই গিরি আর কয়দিন করবি?\n───────────────\n» 👑 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍` 
+          body: `🗑️ 𝗧𝗢𝗞𝗔𝗜 𝗘𝗙𝗙𝗘𝗖𝗧\n───────────────\n» 😎🤨 এই টোকাই তুই টোকাই গিরি আর কয়দিন করবি?\n───────────────\n» 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍` 
         },
         threadID,
         () => fs.unlinkSync(filePath),
@@ -72,7 +59,7 @@ module.exports = {
 
     } catch (err) {
       api.sendMessage(
-        `❌ 𝗘𝗥𝗥𝗢𝗥\n───────────────\n» 🥹 𝗔𝗻 𝗲𝗿𝗿𝗼𝗿 𝗼𝗰𝗰𝘂𝗿𝗿𝗲𝗱, 𝗰𝗼𝗻𝘁𝗮𝗰𝘁 𝘀𝗶𝘆𝗮𝗺.\n───────────────\n» 👑 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`, 
+        `❌ 𝗘𝗥𝗥𝗢Ｒ\n───────────────\n» 🥹 𝗔𝗻 𝗲𝗿𝗿𝗼𝗿 𝗼𝗰𝗰𝘂𝗿𝗿𝗲𝗱, 𝗰𝗼𝗻𝘁𝗮𝗰𝘁 𝘀𝗶𝘆𝗮𝗺.\n───────────────\n» 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`, 
         threadID, 
         messageID
       );
