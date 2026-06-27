@@ -1,8 +1,12 @@
 const fs = require("fs-extra");
+const path = require("path");
 const axios = require("axios");
 const { loadImage, createCanvas } = require("canvas");
 
 const toEnglishName = (name) => {
+  // যদি নাম null বা undefined হয়, তবে 'Unknown' রিটার্ন করবে
+  if (!name) return "Unknown";
+  
   const map = {
     'আ': 'A', 'ই': 'I', 'উ': 'U', 'এ': 'E', 'ও': 'O',
     'ক': 'K', 'খ': 'Kh', 'গ': 'G', 'ঘ': 'Gh', 'ঙ': 'Ng',
@@ -10,7 +14,7 @@ const toEnglishName = (name) => {
     'ট': 'T', 'ঠ': 'Th', 'ড': 'D', 'ঢ': 'Dh', 'ণ': 'N',
     'ত': 'T', 'থ': 'Th', 'দ': 'D', 'ধ': 'Dh', 'ন': 'N',
     'প': 'P', 'ফ': 'Ph', 'ব': 'B', 'ভ': 'Bh', 'ম': 'M',
-    'য': 'Y', 'র': 'R', 'ল': 'L', 'শ': 'Sh', 'ষ': 'Sh', 'স': 'S', 'হ': 'H',
+    'য': 'Y', 'র': 'R', '防': 'L', 'শ': 'Sh', 'ষ': 'Sh', 'স': 'S', 'হ': 'H',
     'া': 'a', 'ি': 'i', 'ী': 'i', 'ু': 'u', 'ূ': 'u', 'ে': 'e', 'ৈ': 'ai', 'ো': 'o', 'ৌ': 'au'
   };
   return name.split('').map(c => map[c] || c).join('').replace(/\s+/g, ' ').trim() || "Unknown";
@@ -19,7 +23,7 @@ const toEnglishName = (name) => {
 module.exports = {
   config: {
     name: "wanted",
-    version: "1.1",
+    version: "1.3",
     author: "MR_FARHAN",
     countDown: 5,
     role: 0,
@@ -42,21 +46,31 @@ module.exports = {
     return "$" + rewards[Math.floor(Math.random() * rewards.length)];
   },
 
-  onStart: async function ({ event, message, api, usersData }) {
+  onStart: async function ({ event, message, usersData }) {
     try {
       const mentionID = Object.keys(event.mentions)[0];
-      if (!mentionID) return message.reply("Mention someone!");
+      if (!mentionID) return message.reply(`⚠️ 𝗜𝗡𝗩𝗔𝗟𝗜𝗗 𝗧𝗔𝗥𝗚𝗘𝗧\n───────────────\n» 📌 𝗣𝗹𝗲𝗮𝘀𝗲 𝗺𝗲𝗻𝘁𝗶𝗼𝗻 𝘀𝗼𝗺𝗲𝗼𝗻𝗲!`);
 
-      const rawName = await usersData.getName(mentionID);
+      // সেফটি চেক: নাম null বা ফেইল হলে 'Wanted User' সেট হবে
+      let rawName = "Wanted User";
+      try {
+        rawName = await usersData.getName(mentionID) || "Wanted User";
+      } catch (e) {
+        console.log("Failed to fetch user name, using fallback.");
+      }
+      
       const name = toEnglishName(rawName);
 
-      // ✅ Always use HD Graph API photo
-      const photoUrl = `https://graph.facebook.com/${mentionID}/picture?height=2048&width=2048&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+      // ✅ Updated Tokenless HD Photo Fetching Method
+      const photoUrl = `https://graph.facebook.com/${mentionID}/picture?type=large&width=1000&height=1000`;
+
+      const cacheDir = path.join(__dirname, "cache");
+      if (!fs.existsSync(cacheDir)) fs.ensureDirSync(cacheDir);
+
+      const avatarPath = path.join(cacheDir, `wanted_avatar_${mentionID}.jpg`);
+      const outputPath = path.join(cacheDir, `wanted_poster_${mentionID}.jpg`);
 
       const res = await axios.get(photoUrl, { responseType: "arraybuffer" });
-      const avatarPath = __dirname + "/cache/wanted_avatar.jpg";
-      const outputPath = __dirname + "/cache/wanted_poster.jpg";
-
       fs.writeFileSync(avatarPath, Buffer.from(res.data));
 
       const canvas = createCanvas(700, 900);
@@ -82,7 +96,6 @@ module.exports = {
       ctx.rect(100, 180, 500, 500);
       ctx.clip();
 
-      // ✅ Resize keeping ratio + better draw quality
       ctx.drawImage(avatar, 100, 180, 500, 500);
       ctx.restore();
       ctx.lineWidth = 4;
@@ -109,14 +122,17 @@ module.exports = {
       fs.writeFileSync(outputPath, canvas.toBuffer("image/jpeg"));
 
       await message.reply({
-        body: `📜 WANTED POSTER\n👤 Name: ${name}\n💣 Crime: ${crime}\n💰 Reward: ${reward}`,
+        body: `📜 𝗪𝗔𝗡𝗧𝗘𝗗 𝗣𝗢𝗦𝗧𝗘𝗥\n───────────────\n» 👤 𝗡𝗔𝗠𝗘 : ${name}\n» 💣 𝗖𝗥𝗜𝗠𝗘 : ${crime}\n» 💰 𝗥𝗘𝗪𝗔𝗥𝗗 : ${reward}\n───────────────\n» 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 : 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`,
         attachment: fs.createReadStream(outputPath)
       });
 
-      [avatarPath, outputPath].forEach(p => fs.existsSync(p) && fs.unlinkSync(p));
+      // Cleanup files
+      if (fs.existsSync(avatarPath)) fs.unlinkSync(avatarPath);
+      if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+
     } catch (err) {
       console.error("Wanted Error:", err);
-      message.reply("❌ Error while generating wanted poster!");
+      message.reply(`❌ 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗜𝗢𝗡 𝗙𝗔𝗜𝗟𝗘𝗗\n───────────────\n» ⚠️ 𝗨𝗻𝗮𝗯𝗹𝗲 𝘁𝗼 𝗰𝗿𝗲𝗮𝘁𝗲 𝘄𝗮𝗻𝘁𝗲𝗱 𝗽𝗼𝘀𝘁𝗲𝗿.\n» ⚙️ 𝗘𝗿𝗿𝗼𝗿 : ${err.message}`);
     }
   }
 };
