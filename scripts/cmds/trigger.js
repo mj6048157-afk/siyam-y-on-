@@ -5,20 +5,20 @@ module.exports = {
   config: {
     name: "trigger",
     version: "1.2",
-    author: "siyam",
+    author: "𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍",
     countDown: 5,
     role: 0,
     shortDescription: "Trigger image",
     longDescription: "Trigger image (tag, reply, or yourself)",
     category: "fun",
     guide: {
-      vi: "{pn} [@tag | reply | để trống]",
       en: "{pn} [@tag | reply | empty]"
     }
   },
 
-  onStart: async function ({ event, message, usersData }) {
+  onStart: async function ({ event, message, usersData, api }) {
     let uid;
+    let w;
 
     // যদি কারও mention করে
     if (Object.keys(event.mentions).length > 0) {
@@ -33,14 +33,31 @@ module.exports = {
       uid = event.senderID;
     }
 
-    const avatarURL = await usersData.getAvatarUrl(uid);
-    const img = await new DIG.Triggered().getImage(avatarURL);
-    const pathSave = `${__dirname}/tmp/${uid}_Trigger.gif`;
+    try {
+      // প্রসেসিং মেসেজ আপনার ডিজাইনে
+      w = await message.reply(`🎨 𝗠𝗔𝗞𝗜𝗡𝗚 𝗚𝗜𝗙\n───────────────\n» ⏳ 𝗣𝗹𝗲𝗮𝘀𝗲 𝘄𝗮𝗶𝘁, 𝗴𝗲𝗻𝗲𝗿𝗮𝘁𝗶𝗻𝗴 𝘆𝗼𝘂𝗿 𝘁𝗿𝗶𝗴𝗴𝗲𝗿 𝗚𝗜𝗙...\n───────────────\n» 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`);
 
-    fs.writeFileSync(pathSave, Buffer.from(img));
+      const avatarURL = await usersData.getAvatarUrl(uid);
+      const img = await new DIG.Triggered().getImage(avatarURL);
+      const pathSave = `${__dirname}/tmp/${uid}_Trigger.gif`;
 
-    message.reply({
-      attachment: fs.createReadStream(pathSave)
-    }, () => fs.unlinkSync(pathSave));
+      // ডিরেক্টরি না থাকলে তৈরি করার সেফটি
+      if (!fs.existsSync(`${__dirname}/tmp`)) {
+        fs.mkdirSync(`${__dirname}/tmp`, { recursive: true });
+      }
+
+      fs.writeFileSync(pathSave, Buffer.from(img));
+
+      if (w) api.unsendMessage(w.messageID);
+
+      await message.reply({
+        body: `💢 𝗧𝗥𝗜𝗚𝗚𝗘𝗥𝗘𝗗 𝗘𝗙𝗙𝗘𝗖𝗧\n───────────────\n» ✨ 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝗴𝗲𝗻𝗲𝗿𝗮𝘁𝗲𝗱!\n───────────────\n» 👑 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`,
+        attachment: fs.createReadStream(pathSave)
+      }, () => fs.unlinkSync(pathSave));
+
+    } catch (e) {
+      if (w) api.unsendMessage(w.messageID);
+      message.reply(`❌ 𝗚𝗘𝗡𝗘𝗥𝗔𝗧𝗜𝗢𝗡 𝗙𝗔𝗜𝗟𝗘𝗗\n───────────────\n» ⚙️ 𝗘𝗿𝗿𝗼𝗿 : ${e.message || "An error occurred."}\n───────────────\n» 👑 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`);
+    }
   }
 };
