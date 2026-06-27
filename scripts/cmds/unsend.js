@@ -1,58 +1,42 @@
-// 😼 Author: 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 😼
-// ⚠️ নাম চেঞ্জ করলে ফাইল নষ্ট হয়ে যাবে ভাই 😾
-
-const AUTHOR_LOCK = "𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍";
-const VISIBLE_AUTHOR = "MR_FARHAN";
-
-if (VISIBLE_AUTHOR !== "MR_FARHAN") {
-	throw new Error("Author Locked!");
-}
-
 module.exports = {
 	config: {
 		name: "unsend",
-		aliases: ["s", "siyam", "uns"],
-		version: "1.2",
-		author: VISIBLE_AUTHOR,
+		aliases: ["u", "uns", "r"],
+		version: "1.6",
+		author: "𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍",
 		countDown: 5,
 		role: 0,
 		description: {
-			vi: "Gỡ tin nhắn của bot",
-			en: "Unsend bot's message"
+			en: "Unsend bot message"
 		},
-		category: "box chat",
-		guide: {
-			vi: "reply tin nhắn muốn gỡ của bot và gọi lệnh {pn}",
-			en: "reply the message you want to unsend and call the command {pn}"
-		}
+		category: "box chat"
 	},
 
-	langs: {
-		vi: {
-			syntaxError: "Vui lòng reply tin nhắn muốn gỡ của bot",
-			cantUnsend: "Không thể gỡ tin nhắn này"
-		},
-		en: {
-			syntaxError: "Please reply the message you want to unsend",
-			cantUnsend: "Cannot unsend this message"
+	onStart: async function ({ message, event, api }) {
+		if (!event.messageReply || event.messageReply.senderID !== api.getCurrentUserID()) {
+			return message.reply(`⚠️ 𝗠𝗜𝗦𝗦𝗜𝗡𝗚 𝗥𝗘𝗣𝗟𝗬\n───────────────\n» ❌ 𝗣𝗹𝗲𝗮𝘀𝗲 𝗿𝗲𝗽𝗹𝘆 𝘁𝗼 𝗮 𝗯𝗼𝘁 𝗺𝗲𝘀𝘀𝗮𝗴𝗲.\n───────────────\n» 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`);
 		}
+
+		message.unsend(event.messageReply.messageID);
 	},
 
-	onStart: async function ({ message, event, api, getLang }) {
+	// NO-PREFIX HANDLER
+	onChat: async function ({ event, message, api }) {
+		if (!event.body || !event.messageReply) return;
 
-		if (!event.messageReply)
-			return message.reply(getLang("syntaxError"));
+		const text = event.body.toLowerCase().trim();
 
-		const botID = api.getCurrentUserID();
+		// বাংলা ও ইংরেজি মিক্সড কি-ওয়ার্ডস লিস্ট
+		const silent = [
+			"u", "uns", "r", "unsend", "s", "siyam",
+			"ডিলিট করো", "আনসেন্ট", "ডিলিট কর বট"
+		];
 
-		if (event.messageReply.senderID != botID)
-			return message.reply(getLang("cantUnsend"));
-
-		try {
-			await api.unsendMessage(event.messageReply.messageID);
-		}
-		catch (e) {
-			return message.reply(getLang("cantUnsend"));
+		if (
+			silent.includes(text) &&
+			event.messageReply.senderID === api.getCurrentUserID()
+		) {
+			message.unsend(event.messageReply.messageID);
 		}
 	}
 };
