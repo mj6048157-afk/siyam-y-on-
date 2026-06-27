@@ -6,13 +6,14 @@ module.exports = {
   config: {
     name: "userinfo",
     version: "1.1.0",
-    author: "siyam-Hassan",
+    author: "𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍",
     role: 0,
     category: "info",
     shortDescription: "User Information",
     longDescription: "Show stylish user information with avatar",
     guide: "{pn} [reply/tag/uid]",
-    countDown: 5
+    countDown: 5,
+    cooldowns: 5
   },
 
   onStart: async function ({ api, event, args }) {
@@ -35,7 +36,7 @@ module.exports = {
 
       if (!userInfo || !userInfo[targetID]) {
         return api.sendMessage(
-          "❌ User information not found.",
+          `❌ 𝗡𝗢𝗧 𝗙𝗢𝗨𝗡𝗗\n───────────────\n» 👤 𝗨𝘀𝗲𝗿 𝗶𝗻𝗳𝗼𝗿𝗺𝗮𝘁𝗶𝗼𝗻 𝗻𝗼𝘁 𝗳𝗼𝘂𝗻𝗱.\n───────────────\n» 👑 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`,
           threadID,
           messageID
         );
@@ -51,7 +52,6 @@ module.exports = {
 
       const imgPath = path.join(cacheDir, `avatar_${targetID}.png`);
 
-      // ✅ NEW FIXED PROFILE API (WORKING)
       try {
         const avatarURL =
           `https://graph.facebook.com/${targetID}/picture?width=720&height=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
@@ -67,12 +67,12 @@ module.exports = {
 
       const gender =
         info.gender == 2
-          ? "👨 Male"
+          ? "👨 𝗠𝗮𝗹𝗲"
           : info.gender == 1
-          ? "👩 Female"
-          : "❓ Unknown";
+          ? "👩 𝗙𝗲𝗺𝗮𝗹𝗲"
+          : "❓ 𝗨𝗻𝗸𝗻𝗼𝘄𝗻";
 
-      let userClass = "👤 Normal User";
+      let userClass = "👤 𝗡𝗼𝗿𝗺𝗮𝗹 𝗨𝘀𝗲𝗿";
 
       try {
         if (
@@ -81,26 +81,23 @@ module.exports = {
           Array.isArray(global.GoatBot.config.adminBot) &&
           global.GoatBot.config.adminBot.includes(String(targetID))
         ) {
-          userClass = "⚡ Bot Admin";
+          userClass = "⚡ 𝗕𝗼𝘁 𝗔𝗱𝗺𝗶𝗻";
         }
       } catch (e) {}
 
-      const msg =
-`✦ ─── ✧ ─── ✦
-✨ 𝗨𝗦𝗘𝗥 𝗜𝗡𝗙𝗢 ✨
-✦ ─── ✧ ─── ✦
-
-🙍 Name: ${info.name || "N/A"}
-🏷️ First Name: ${info.firstName || "N/A"}
-🆔 UID: ${targetID}
-🏫 Class: ${userClass}
-🚻 Gender: ${gender}
-🎂 Birthday: ${info.birthday || "Not Set"}
-🤝 Friend With Bot: ${info.isFriend ? "✅ Yes" : "❌ No"}
-🌐 Profile:
-https://facebook.com/${targetID}
-
-✦ ─── ✧ ─── ✦`;
+      const msg = 
+`👤 𝗨𝗦𝗘𝗥 𝗜𝗡𝗙𝗢𝗥𝗠𝗔𝗧𝗜𝗢𝗡
+───────────────
+» 🙍 𝗡𝗔𝗠𝗘 : ${info.name || "N/A"}
+» 🏷️ 𝗙𝗜𝗥𝗦𝗧 𝗡𝗔𝗠𝗘 : ${info.firstName || "N/A"}
+» 🆔 𝗨𝗜𝗗 : ${targetID}
+» 🏫 𝗖𝗟𝗔𝗦𝗦 : ${userClass}
+» 🚻 𝗚𝗘𝗡𝗗𝗘𝗥 : ${gender}
+» 🎂 𝗕𝗜𝗥𝗧𝗛𝗗𝗔𝗬 : ${info.birthday || "Not Set"}
+» 🤝 𝗙𝗥𝗜𝗘𝗡𝗗 : ${info.isFriend ? "✅ Yes" : "❌ No"}
+» 🔗 𝗣𝗥𝗢𝗙𝗜𝗟𝗘 : https://facebook.com/${targetID}
+───────────────
+» 👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`;
 
       if (fs.existsSync(imgPath)) {
         api.sendMessage(
@@ -121,7 +118,7 @@ https://facebook.com/${targetID}
     } catch (err) {
       console.error(err);
       api.sendMessage(
-        "⚠️ Couldn’t fetch user info.",
+        `❌ 𝗘𝗥𝗥𝗢𝗥\n───────────────\n» ⚠️ 𝗖𝗼𝘂𝗹𝗱𝗻’𝘁 𝗳𝗲𝘁𝗰𝗵 𝘂𝘀𝗲𝗿 𝗶𝗻𝗳𝗼.\n───────────────\n» 👑 𝗢𝗪𝗡𝗘𝗥 : 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍`,
         event.threadID,
         event.messageID
       );
