@@ -82,7 +82,7 @@ module.exports = {
 » 🔗 𝗗𝗢𝗠𝗔𝗜𝗡 : ${domain}
 » 📍 𝗜𝗣 : ${ip}
 » 🛡️ 𝗦𝗘𝗖𝗨𝗥𝗜𝗧𝗬 : ${ssl}
-» ⚡ 替代 𝗥𝗘𝗦𝗣𝗢𝗡𝗦𝗘 : ${responseTime} ms
+» ⚡ 𝗥𝗘𝗦𝗣𝗢𝗡𝗦𝗘 : ${responseTime} ms
 » 🧠 𝗦𝗘𝗥𝗩𝗘𝗥 : ${server}
 » 🌍 𝗖𝗢𝗨𝗡𝗧𝗥𝗬 : ${country}
 ───────────────
