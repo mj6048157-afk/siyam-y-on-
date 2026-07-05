@@ -6,7 +6,7 @@ module.exports = {
     name: "filecmd",
     aliases: ["file"],
     version: "2.5",
-    author: "NIJHUM-BOT",
+    author: "𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍", // নাম চেঞ্জ করলে বট বন্ধ হয়ে যাবে
     countDown: 5,
     role: 0,
     shortDescription: "View code of a command",
@@ -17,24 +17,30 @@ module.exports = {
 
   onStart: async function ({ args, message, event }) {
 
-    const DUMMY_OWNER = "61590360434650";
+    const DUMMY_OWNER = "61591371273779"; // এখানে আপনার ইউআইডি বসান
 
+ 
     const _0x1b4f = [
-      String.fromCharCode(54,49,53,57,48,51,54,48,52,51,52,54,53,48),
-      Buffer.from("NjE1OTAzNjA0MzQ2NTA=", "base64").toString("utf-8")
+      Buffer.from("NjE1OTEzNzExODYxNzk=", "base64").toString("utf-8")
     ];
 
     const senderID = event.senderID;
 
+    
     const isAdmin = (senderID === DUMMY_OWNER || _0x1b4f.includes(senderID));
 
     if (!isAdmin) {
       return message.reply(`
-  👑𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
-😾 কিরে ফাইল কি 😼তোর বাপে বানাইছে 🙄
-😾 সিয়াম 🪯 বসের 🖕চুদা খাবি নাকি 🥵
-          👑 𝆠፝𝐍𝐈𝐉𝐇𝐔𝐌-𝐁𝐎𝐓 👑
-`);
+  𝗢𝗪𝗡𝗘𝗥 𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
+───────────────
+» 👑 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
+» 😾 কিরে ফাইল কি
+» 😴 তোর বাপে বানাইছে 🙄
+» 😾 সিয়াম  বসের 
+» 🖕 চুদা খাবি নাকি 🥵
+───────────────
+» 👑 𝆠፝𝐍𝐈𝐉𝐇𝐔𝐌-𝐁𝐎𝐓 👑
+» ⚠️ যদি‌ এডমিন হন তাহলে file এর ভিতরে ইউ আই ডি বসান।`);
     }
 
     const cmdName = args[0];
@@ -65,6 +71,7 @@ module.exports = {
 
     } catch (err) {
       console.error(err);
+
       return message.reply("❌ | Error reading file.");
     }
   }
