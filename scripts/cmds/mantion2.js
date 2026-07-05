@@ -26,15 +26,15 @@ if (!fs.existsSync(CACHE_DIR)) {
 // 🎬 VIDEO LIST
 const videoList = [
   {
-    url: "https://files.catbox.moe/qrcggr.mp4",
+    url: "https://files.catbox.moe/yior58.mp4",
     file: "video1.mp4"
   },
   {
-    url: "https://files.catbox.moe/jjrnjf.mp4",
+    url: "https://files.catbox.moe/c27nvc.mp4",
     file: "video2.mp4"
   },
   {
-    url: "https://files.catbox.moe/psl98k.mp4",
+    url: "https://files.catbox.moe/qu53g7.mp4",
     file: "video3.mp4"
   },
   {
@@ -109,7 +109,7 @@ module.exports = {
           uid: "61568411310748",
           triggers: [
             "@পি্ঁচ্চি্ঁ রি্ঁদ্ঁয়্ঁ ত্যা্ঁহ্ঁ",
-            "@আ্ঁসো্ঁ সে্ঁক্স্ঁ ক্ঁরি্ঁ",
+            "@RJ siyam",
             "siyam",
             "*siyam",
             "সিয়াম ভাই",
