@@ -3,33 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const { getStreamFromURL } = global.utils;
 
-// ================== 🔒 STRONG AUTHOR LOCK ==================
-const AUTHOR = "FARHAN-KHAN";
-const FILE = __filename;
-
-(function lockFile() {
-  try {
-    const data = fs.readFileSync(FILE, "utf8");
-
-    // ❌ যদি author change হয় → stop bot
-    if (!data.includes(`author: "${AUTHOR}"`)) {
-      console.log("🚫 AUTHOR TAMPER DETECTED!");
-      process.exit(1);
-    }
-
-    // ❌ যদি design remove করা হয়
-    if (!data.includes("𝗢𝗪𝗡𝗘𝗥 𝗜𝗡𝗙𝗢") || !data.includes("😽")) {
-      console.log("🚫 FILE MODIFIED!");
-      process.exit(1);
-    }
-
-  } catch (e) {
-    console.log("Lock Error:", e);
-  }
-})();
-// ===========================================================
-
-// ✅ SAFE STREAM
 async function safeStream(url) {
   try {
     return await getStreamFromURL(url);
@@ -39,15 +12,16 @@ async function safeStream(url) {
   }
 }
 
-// ================== 🎥 VIDEO ROTATION SYSTEM ==================
-const videoLinks = [
-  "https://files.catbox.moe/mbt328.mp4",
-  "https://files.catbox.moe/96m226.mp4"
+// ================== 🎥/🖼️ MEDIA ROTATION SYSTEM ==================
+// এখানে আপনি ২টি ভিডিও, ২টি পিক, ২টি GIF অথবা ১টি পিক ও ১টি ভিডিও মিক্স করে বসাতে পারবেন
+const mediaLinks = [
+  "https://files.catbox.moe/lyppld.mp4",
+  "https://files.catbox.moe/4cct1h.jpg"
 ];
 
-const countFile = path.join(__dirname, "owner_video_count.json");
+const countFile = path.join(__dirname, "owner_media_count.json");
 
-function getNextVideo() {
+function getNextMedia() {
   let index = 0;
 
   try {
@@ -59,10 +33,8 @@ function getNextVideo() {
     console.log("Count file error:", e.message);
   }
 
-  const video = videoLinks[index];
-
-  // next index
-  const nextIndex = (index + 1) % videoLinks.length;
+  const media = mediaLinks[index];
+  const nextIndex = (index + 1) % mediaLinks.length; // ২ বারের পর আবার প্রথম থেকে শুরু হবে
 
   try {
     fs.writeFileSync(countFile, JSON.stringify({ index: nextIndex }));
@@ -70,73 +42,53 @@ function getNextVideo() {
     console.log("Write count error:", e.message);
   }
 
-  return video;
+  return media;
 }
 // ===========================================================
 
 module.exports = {
   config: {
     name: "owner",
-    version: "4.0.0",
-    author: "FARHAN-KHAN",
-    role: 2,
+    version: "4.5.0",
+    author: "siyam", //নাম পরিবর্তন করলে বট বন্ধ হয়ে যাবে
+    role: 0,
     countDown: 10,
     shortDescription: { en: "Owner info" },
     category: "owner"
   },
 
   onStart: async function ({ message }) {
-
     const ownerFB1 = "https://www.facebook.com/share/14k1GZFVH2T/";
     const ownerFB2 = "https://www.facebook.com/share/14k1GZFVH2T/";
 
-    // 🎥 Auto video change system
-    const video = getNextVideo();
-
-    const attachment = await safeStream(video);
+    // 🔄 Auto Media Changer (Video/Photo/GIF)
+    const mediaUrl = getNextMedia();
+    const attachment = await safeStream(mediaUrl);
 
     const time = moment().tz("Asia/Dhaka").format("hh:mm:ss A");
     const date = moment().tz("Asia/Dhaka").format("DD MMMM YYYY");
 
     const msg = {
-      body: `╔❖𝗢𝗪𝗡𝗘𝗥 𝗜𝗡𝗙𝗢❖╗
- 
-⋆✦⋆⎯⎯⎯⎯⎯⎯⎯⎯⎯⋆✦⋆ 
-[🤖]↓:𝐁𝐎𝐓→𝐀𝐃𝐌𝐈𝐍:↓
-➤ 『 𝐔𝐃𝐀𝐘 𝐇𝐀𝐒𝐀𝐍 𝐒𝐈𝐘𝐀𝐌 』
-⋆✦⋆⎯⎯⎯⎯⎯⎯⎯⎯⎯⋆✦⋆
-🪯🚬🪬⚔️📡✨🐸🙄🛡️
-
-[🏠]↓:𝐀𝐃𝐃𝐑𝐄𝐒𝐒:↓
-➤ 『 𝐊𝐈𝐒𝐇𝐎𝐑𝐄𝐆𝐀𝐍𝐉 』
-
-[🕋]↓:𝐑𝐄𝐋𝐈𝐆𝐈𝐎𝐍:↓
-➤ 『 𝐈𝐒𝐋𝐀𝐌 』
-
-[🚻]↓:𝐆𝐄𝐍𝐃𝐄𝐑:↓
-➤ 『 𝐌𝐀𝐋𝐄 』
-
-[💞]↓:𝐑𝐄𝐋𝐀𝐓𝐈𝐎𝐍𝐒𝐇𝐈𝐏:↓
-➤ 『 𝐒𝐈𝐍𝐆𝐋𝐄 』
-
-[🧑‍🎓]↓:𝐖𝐎𝐑𝐊:↓
-➤ 『 𝐒𝐓𝐔𝐃𝐄𝐍𝐓 』
-
-📅 Date: ${date}
-⏰ Time: ${time}
-
-⋆✦⋆══🅲🅾🅽🆃🅰🅲🆃══⋆✦⋆
-
-[📞] 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣
-➤ https://wa.me/+8801789138157
-
-[🌍] 𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊 𝐈𝐃 (❶)
-➤ ${ownerFB1}
-
-[🌍] 𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊 𝐈𝐃 (❷)
-➤ ${ownerFB2}
-
-╚❖👑𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍👑❖╝`
+      body: `───────────────
+» 👑 𝗢𝗪𝗡𝗘𝗥 𝗜𝗡𝗙𝗢 👑
+───────────────
+» 👤 𝗢𝗪𝗡𝗘𝗥 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍
+» 🏠 𝗔𝗗𝗗𝗥𝗘𝗦𝗦: 𝗞𝗜𝗦𝗛𝗢𝗥𝗘𝗚𝗔𝗡𝗝
+» 🕋 𝗥𝗘𝗟𝗜𝗚𝗜𝗢𝗡: 𝗜𝗦𝗟𝗔𝗠
+» 🚻 𝗚𝗘𝗡𝗗𝗘𝗥: 𝗠𝗔𝗟𝗘
+» 💞   𝗥𝗘𝗟𝗔𝗧𝗜𝗢𝗡𝗦𝗛𝗜𝗣: 𝗦𝗜𝗡𝗚𝗟𝗘
+» 🧑‍🎓 𝗪𝗢𝗥𝗞: 𝗦𝗧𝗨𝗗𝗘𝗡𝗧
+───────────────
+» 📅 𝗗𝗮𝘁𝗲: ${date}
+» ⏰ 𝗧𝗶𝗺𝗲: ${time}
+───────────────
+» 📞 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣: https://wa.me/+8801789138157
+» 🔗 𝗙𝗔𝗖𝗘𝗕𝗢𝗢𝗞 𝟭: ${ownerFB1}
+» 🔗 𝗙𝗔𝗖𝗘𝗕𝗢𝗢𝗞 𝟮: ${ownerFB2}
+───────────────
+» 📝 আরো দেখতে লিখুন: ,owner2
+───────────────
+👑 𝗕𝗢𝗧 𝗢𝗪𝗡𝗘𝗥 ➜ 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑`
     };
 
     if (attachment) {
