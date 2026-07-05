@@ -1,126 +1,96 @@
+const fs = require("fs");
+const path = require("path");
 const moment = require("moment-timezone");
 
-let videoIndex = 0; // ✅ Video rotation system
+let mediaIndex = 0;
 
 module.exports = {
-config: {
-name: "info",
-version: "4.1.2",
-author: "Siyam",
-role: 0,
-countDown: 20,
-shortDescription: {
-en: "Owner & bot info"
-},
-longDescription: {
-en: "Show full stylish info"
-},
-category: "owner",
-guide: {
-en: "{pn}"
-}
-},
+  config: {
+    name: "info",
+    version: "4.4.0",
+    author: "𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍", //নাম চেঞ্জ করলে বট বন্ধ হয়ে যাবে
+    role: 0,
+    countDown: 20,
+    shortDescription: { en: "Owner & bot info" },
+    longDescription: { en: "Show full stylish info" },
+    category: "owner",
+    guide: { en: "{pn}" }
+  },
 
-onStart: async function ({ message, event, api }) {
+  onStart: async function ({ message, event, api }) {
+    const totalCommands = global.GoatBot?.commands?.size || 0;
+    const now = moment().tz("Asia/Dhaka");
+    const date = now.format("MMMM Do YYYY");
+    const time = now.format("h:mm:ss A");
 
-const totalCommands = global.GoatBot?.commands?.size || 0;  
+    const uptime = process.uptime();
+    const days = Math.floor(uptime / 86400);
+    const hours = Math.floor((uptime % 86400) / 3600);
+    const minutes = Math.floor((uptime % 3600) / 60);
+    const seconds = Math.floor(uptime % 60);
+    const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-const now = moment().tz("Asia/Dhaka");  
-const date = now.format("MMMM Do YYYY");  
-const time = now.format("h:mm:ss A");  
+    const prefix = global.utils.getPrefix(event.threadID);
+    const groupName = event.threadName || "বলবো না 😁 সিয়াম বস কে প্রেম করাই দাও নাই😴";
 
-const uptime = process.uptime();  
-const days = Math.floor(uptime / 86400);  
-const hours = Math.floor((uptime % 86400) / 3600);  
-const minutes = Math.floor((uptime % 3600) / 60);  
-const seconds = Math.floor(uptime % 60);  
+    let botName = "Unknown Bot";
+    try {
+      const botID = api.getCurrentUserID();
+      const botInfo = await api.getUserInfo(botID);
+      botName = botInfo[botID]?.name || "Bot";
+    } catch (e) {}
 
-const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;  
+    
+    const mediaFiles = [
+      "https://files.catbox.moe/8f2fc5.mp4",
+      "https://files.catbox.moe/3aikdw.mp4"
+    ];
 
-const prefix = global.utils.getPrefix(event.threadID);  
-const groupName = event.threadName || "Unknown Group";  
+    let attachment;
+    if (mediaFiles.length > 0) {
+      const currentMedia = mediaFiles[mediaIndex % mediaFiles.length];
+      mediaIndex = (mediaIndex + 1) % mediaFiles.length;
 
-// ✅ AUTO BOT NAME SYSTEM  
-let botName = "Unknown Bot";  
-try {  
-  const botID = api.getCurrentUserID();  
-  const botInfo = await api.getUserInfo(botID);  
-  botName = botInfo[botID]?.name || "Bot";  
-} catch (e) {}  
+      try {
+        const urlClean = currentMedia.split('?')[0].toLowerCase();
+        if (urlClean.endsWith(".mp4") || urlClean.endsWith(".mov") || urlClean.endsWith(".mkv") || urlClean.includes("video")) {
+          attachment = await global.utils.getStreamFromURL(currentMedia, "video.mp4");
+        } else if (urlClean.endsWith(".gif") || urlClean.includes("gif")) {
+          attachment = await global.utils.getStreamFromURL(currentMedia, "animated.gif");
+        } else {
+          attachment = await global.utils.getStreamFromURL(currentMedia, "image.jpg");
+        }
+      } catch (err) {
+        attachment = undefined;
+      }
+    }
 
-// ✅ VIDEO LIST
-const videos = [
-  "https://files.catbox.moe/8f2fc5.mp4",
-  "https://files.catbox.moe/3aikdw.mp4"
-];
-
-// ✅ AUTO CHANGE VIDEO
-const videoLink = videos[videoIndex];
-videoIndex = (videoIndex + 1) % videos.length;
-
-return message.reply({  
-  body: `
-
-👑 ╭─❖ 𝐁𝐎𝐓 𝐎𝐖𝐍𝐄𝐑 ❖─╮
-╰➤ 👑𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
-
-🤖 ╭─❖ 𝐁𝐎𝐓 𝐍𝐀𝐌𝐄 ❖─╮
-╰➤ ${botName}
-
-🎂 ╭─❖ 𝐀𝐆𝐄 ❖─╮
-╰➤ 𝟏𝟔
-
-🚻 ╭─❖ 𝐆𝐄𝐍𝐃𝐄𝐑 ❖─╮
-╰➤ 𝐌𝐀𝐋𝐄
-
-☪ ╭─❖ 𝐑𝐄𝐋𝐈𝐆𝐈𝐎𝐍 ❖─╮
-╰➤ 𝐈𝐒𝐋𝐀𝐌
-
-🌐 ╭─❖ 𝐅𝐀𝐂𝐄𝐁𝐎𝐎𝐊 ❖─╮
-╰➤ https://facebook.com/61560326905548
-
-💬 ╭─❖ 𝐌𝐄𝐒𝐒𝐄𝐍𝐆𝐄𝐑 ❖─╮
-╰➤ https://facebook.com/61560326905548
-
-📞 ╭─❖ 𝐖𝐇𝐀𝐓𝐒𝐀𝐏𝐏 ❖─╮
-╰➤ +8801789138157
-
-👑 ╭─❖ 𝐆𝐑𝐎𝐔𝐏 ❖─╮
-╰➤ ${groupName}
-
-⚙️ ╭─❖ 𝐏𝐑𝐄𝐅𝐈𝐗 ❖─╮
-╰➤ ${prefix}
-
-💬 ╭─❖ 𝐇𝐄𝐋𝐏 ❖─╮
-╰➤ ${prefix}help2
-
-📦 ╭─❖ 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒 ❖─╮
-╰➤ ${totalCommands}
-
-⏳ ╭─❖ 𝐔𝐏𝐓𝐈𝐌𝐄 ❖─╮
-╰➤ ${uptimeString}
-
-🕒 ╭─❖ 𝐓𝐈𝐌𝐄 ❖─╮
-╰➤ ${time}
-
-📅 ╭─❖ 𝐃𝐀𝐓𝐄 ❖─╮
-╰➤ ${date}
-
-🏠 ╭─❖ 𝐀𝐃𝐃𝐑𝐄𝐒𝐒 ❖─╮
-╰➤ 𝐊𝐈𝐒𝐇𝐎𝐑𝐄𝐆𝐀𝐍𝐉 → 𝐁𝐀𝐍𝐆𝐋𝐀𝐃𝐄𝐒𝐇
-
-🏫 ╭─❖ 𝐒𝐂𝐇𝐎𝐎𝐋 ❖─╮
-╰➤ 𝐌 𝐀 𝐌𝐀𝐍𝐍𝐀𝐍 𝐌𝐀𝐍𝐈𝐊 𝐇𝐈𝐆𝐇 𝐒𝐂𝐇𝐎𝐎𝐋
-
-💔 ╭─❖ 𝐑𝐄𝐋𝐀𝐓𝐈𝐎𝐍𝐒𝐇𝐈𝐏 ❖─╮
-╰➤ 𝐒𝐈𝐍𝐆𝐋𝐄
-
-🛠 ╭─❖ 𝐖𝐎𝐑𝐊 ❖─╮
-╰➤𝐍𝐎𝐓 𝐖𝐎𝐑𝐊𝐈𝐍𝐆
-
-╰━━━━━❖✡️❖━━━━━╯
-`,
-attachment: await global.utils.getStreamFromURL(videoLink)
-});
-}
+    return message.reply({
+      body: `  𝗢𝗪𝗡𝗘𝗥 𝗦𝗜𝗬𝗔𝗠-𝗛𝗔𝗦𝗔𝗡
+───────────────
+» 👑 𝗢𝗪𝗡𝗘𝗥: 𝆠፝𝐒𝐈𝐘𝐀𝐌-𝐇𝐀𝐒𝐀𝐍 👑
+» 🤖 𝗕𝗢𝗧 𝗡𝗔𝗠𝗘: ${botName}
+» 🎂 𝗔𝗚𝗘: 18 𝟏7+
+» 🚻 𝗚𝗘𝗡𝗗𝗘𝗥: 𝐌𝐀𝐋𝐄
+» ☪ 𝗥𝗘𝗟𝗜𝗚𝗜𝗢𝗡: 𝐈𝐒𝐋𝐀𝐌
+───────────────
+» 🏠 𝗔𝗗𝗗𝗥𝗘𝗦𝗦: 𝐊𝐈𝐒𝐇𝐎𝐑𝐄𝐆𝐀𝐍𝐉 → 𝐁𝐀𝐍𝐆𝐋𝐀𝐃𝐄𝐒𝐇
+» 🏫 𝗦𝗖𝗛𝗢𝗢𝗟: 𝐌 𝐀 𝐌𝐀𝐍𝐍𝐀𝐍 𝐌𝐀𝐍𝐈𝐊 𝐇𝐈𝐆𝐇 𝐒𝐂𝐇𝐎𝐎𝐋
+» 💔 𝗥𝗘𝗟𝗔𝗧𝗜𝗢𝗡𝗦𝗛𝗜𝗣: 𝐒𝐈𝐍𝐆𝐋𝐄
+» 🛠 𝗪𝗢𝗥𝗞: 𝐍𝐎𝐓 𝐖𝐎𝐑𝐊𝐈𝐍𝐆
+» 🕒 𝗧𝗜𝗠𝗘: ${time}
+» 📅 𝗗𝗔𝗧𝗘: ${date}
+───────────────
+» 👑 𝗚𝗥𝗢𝗨𝗣: ${groupName}
+» ⚙️ 𝗣𝗥𝗘𝗙𝗜𝗫: ${prefix}
+» 💬 𝗛𝗘𝗟𝗣: ${prefix}help2
+» 📦 𝗖𝗢𝗠𝗠𝗔𝗡𝗗𝗦: ${totalCommands}
+» ⏳ 𝗨𝗣𝗧𝗜𝗠𝗘: ${uptimeString}
+───────────────
+» 🌐 𝗙𝗔𝗖𝗘𝗕𝗢𝗢𝗞: https://www.facebook.com/profile.php?id=61591371186179
+» 💬 𝗧𝗜𝗞𝗧𝗢𝗞: siyam0132525
+» 📞 𝗪𝗛𝗔𝗧𝗦𝗔𝗣𝗣: +8801789138157`,
+      attachment: attachment
+    });
+  }
 };
